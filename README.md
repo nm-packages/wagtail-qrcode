@@ -170,7 +170,7 @@ WAGTAIL_QR_CODE = {
 
 ## Contributing
 
-If you would like to suggest an improvement to the package [contributions](docs/contrubute.md) are welcome
+If you would like to suggest an improvement to the package [contributions](docs/contribute.md) are welcome
 
 ## Issues
 

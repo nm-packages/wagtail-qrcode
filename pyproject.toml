@@ -5,9 +5,10 @@ description = "Create a QR code that can be used to link to a wagtail page"
 readme = "README.md"
 keywords = ["wagtail", "qrcode"]
 authors = [
-    {name = "Nick Moreton", email = "nickmoreton@me.com"}
+    { name = "Nick Moreton", email = "nickmoreton@me.com" }
 ]
 license = {file = "LICENSE"}
+
 classifiers = [
   "Development Status :: 5 - Production/Stable",
   "Intended Audience :: Developers",
@@ -28,20 +29,12 @@ classifiers = [
   "Framework :: Wagtail :: 5",
   "Framework :: Wagtail :: 6",
 ]
-requires-python = ">=3.9"
-dependencies =[
-    "Wagtail>=5.2",
-    "PyQRCode>=1,<2"
-]
 
-[project.optional-dependencies]
-development = [
-    "black==24.10.0",
-    "flake8==7.1.1",
-    "isort==5.13.2",
-]
-testing = [
-  "coverage"
+requires-python = ">=3.9"
+
+dependencies = [
+    "pyqrcode>=1,<2",
+    "wagtail>=5.2",
 ]
 
 [project.urls]
@@ -49,6 +42,22 @@ Repository = "https://github.com/wagtail-packages/wagtail-qrcode"
 Issues = "https://github.com/wagtail-packages/wagtail-qrcode/issues"
 Changelog = "https://github.com/wagtail-packages/wagtail-qrcode/blob/release/CHANGELOG.md"
 
+[dependency-groups]
+dev = [
+    "black>=25.1.0",
+    "flake8>=7.2.0",
+    "isort>=6.0.1",
+    "pre-commit>=4.2.0",
+]
+
+[project.optional-dependencies]
+testing = [
+    "coverage>=7.6.9",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.black]
 line-length = 88
