@@ -42,6 +42,14 @@ Repository = "https://github.com/wagtail-packages/wagtail-qrcode"
 Issues = "https://github.com/wagtail-packages/wagtail-qrcode/issues"
 Changelog = "https://github.com/wagtail-packages/wagtail-qrcode/blob/release/CHANGELOG.md"
 
+[dependency-groups]
+dev = [
+    "black>=25.1.0",
+    "flake8>=7.2.0",
+    "isort>=6.0.1",
+    "pre-commit>=4.2.0",
+]
+
 [project.optional-dependencies]
 testing = [
     "coverage>=7.6.9",
