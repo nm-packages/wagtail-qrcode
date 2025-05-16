@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Adjust for using UV for dependency management
+
 ## [2.1.1] - 2025-05-16
 
 - Test against Wagtail 5.2 - 6.3 and Django 4.2 - 5.1
