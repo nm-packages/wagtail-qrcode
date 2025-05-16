@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## [2.1.1] - 2025-05-16
+
+- Test against Wagtail 5.2 - 6.3 and Django 4.2 - 5.1
+- Fix template attribute from `class_name` to `classname` for Wagtail 6.0 compatibility
+- Fix hooks to only delete documents with existing QR codes
+- Drop support for Python 3.8
+- Update contribution guidelines
+
 ## [2.1.0] - 2024-07-14
 
 - Add testing for Wagtail 5.2 & 6.0
