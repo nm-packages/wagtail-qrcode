@@ -1,6 +1,6 @@
 [project]
 name = "wagtail-qrcode"
-version = "2.1.0"
+version = "2.1.1"
 description = "Create a QR code that can be used to link to a wagtail page"
 readme = "README.md"
 keywords = ["wagtail", "qrcode"]
