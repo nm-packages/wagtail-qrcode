@@ -71,3 +71,17 @@ is retired from active development. See the
 [contribution workflow](docs/contrubute.md#branches-and-pull-requests).
 
 History uses short, descriptive subjects such as `Update pre-commit hooks and dependencies`; no mandatory prefix scheme is evident. Keep commits focused. In pull requests, explain the behavior change, link relevant issues, and report validation commands/results. Include screenshots for admin interface changes and update documentation when configuration or public behavior changes.
+
+Use the [PR template](.github/pull_request_template.md), removing sections that do
+not apply. Keep the title and description aligned with the complete final diff.
+When pushing additional work to an existing PR, update its description and
+validation results in the same workflow. Identify the commit or revision for CI
+results and distinguish earlier passing runs from checks for the current head.
+
+Add an entry under `Unreleased` in [CHANGELOG.md](CHANGELOG.md) for notable
+changes, including features, bug fixes, compatibility changes, and contributor
+workflow changes. Describe the outcome and any action users or contributors
+need to take, following the existing style. Trivial edits need no entry; explain
+in the PR when no changelog update is needed. Keep entries aligned with the final
+scope when more work is added to an existing PR. Do not assign a release version
+or date outside release preparation.

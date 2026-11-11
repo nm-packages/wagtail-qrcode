@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Add repository skills for development, code review, Wagtail integration, and Python, Django, Wagtail, and combined platform upgrades.
+- Standardize contribution and release preparation on `main`; retire `release` from active development.
+- Add a PR template and contributor guidance for keeping descriptions and validation results current and recording notable changes in the changelog.
+- Fix the Django 5.1 tox dependency selector and pin CI runners to Ubuntu 24.04 for the existing Python test matrix.
+
 ## [2.1.1] - 2025-05-16
 
 - Test against Wagtail 5.2 - 6.3 and Django 4.2 - 5.1

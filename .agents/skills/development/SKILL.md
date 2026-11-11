@@ -62,6 +62,11 @@ configuration changes. Use the [feature guide template](assets/developer-feature
 when a feature needs a standalone developer guide. Include any setup, editor
 workflow, and concrete steps to verify it.
 
+Add notable features, fixes, compatibility changes, and contributor workflow
+changes to `CHANGELOG.md` under `Unreleased`, following the changelog rule in
+`AGENTS.md`. Keep entries aligned with the final PR scope. Trivial edits need no
+entry; explain in the PR when a changelog update is unnecessary.
+
 Report the change, checks and results, and any limitations that affect use or
 review. Follow `AGENTS.md` for commit and PR conventions and keep each commit
 focused on the behavior it delivers.
