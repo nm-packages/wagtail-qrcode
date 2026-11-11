@@ -56,4 +56,10 @@ When updating imported skills, follow the
 
 ## Commit & Pull Request Guidelines
 
+Create working branches from the latest `main` and target pull requests at
+`main`, the default integration branch. Prepare releases through `main` and
+create release tags from reviewed commits there. The former `release` branch
+is retired from active development. See the
+[contribution workflow](docs/contrubute.md#branches-and-pull-requests).
+
 History uses short, descriptive subjects such as `Update pre-commit hooks and dependencies`; no mandatory prefix scheme is evident. Keep commits focused. In pull requests, explain the behavior change, link relevant issues, and report validation commands/results. Include screenshots for admin interface changes and update documentation when configuration or public behavior changes.

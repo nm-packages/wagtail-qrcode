@@ -1,11 +1,35 @@
 # Contributing
 
+## Branches and pull requests
+
+`main` is the default branch and the integration branch for ongoing work.
+Create working branches from an up-to-date `main` and target pull requests
+at `main`. This applies to features, bug fixes, documentation, maintenance,
+and release preparation.
+
+The former `release` branch is retired from active development.
+Prepare releases through pull requests into `main`, then create release tags
+from the reviewed commits on `main`. Use the existing tag format, such as
+`2.1.1`.
+
+For an existing checkout, start new work with:
+
+```bash
+git fetch origin
+git switch main
+git pull --ff-only origin main
+git switch -c improve-qr-code-preview
+```
+
+Choose a branch name that describes the change. Confirm the pull request's base
+branch is `main` before submitting it.
+
 ## Development setup
 
 ### First clone this repo to your computer
 
 ```bash
-git clone https://github.com/nickmoreton/wagtail-qrcode
+git clone --branch main https://github.com/nm-packages/wagtail-qrcode
 ```
 
 ## Setup a virtual environment
