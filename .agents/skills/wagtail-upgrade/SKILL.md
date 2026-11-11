@@ -10,7 +10,7 @@ Example requests (explicit invocation syntax depends on the agent):
 
 - For planning: “Plan an upgrade from Wagtail 5.2 to the latest supported release; do not change files.”
 - For sites: “Upgrade this site to Wagtail 7.3.”, "Upgrade Wagtail to latest"
-- For packages: “Add support for Wagtail 7.3 while preserving our existing supported versions.”
+- For packages: “Refresh Wagtail support according to the repository's platform support policy.”
 
 ## Overview
 
@@ -30,7 +30,7 @@ Comprehensive project and dependencies review to identify needed changes to upgr
 - Prefer minimal, reviewable changes. Avoid introducing technical debt.
 - Make dependency updates explicit and reproducible (lockfile updates included).
 - For planning-only requests, inspect and report without changing files, creating branches, installing dependencies, migrating databases, committing, or pushing. Mark unavailable checks and unresolved compatibility instead of inventing results.
-- Respect existing authorization. Continue routine changes necessary for an authorized upgrade; ask only when a decision changes scope, drops promised compatibility, or affects an external system beyond that authorization.
+- Respect existing authorization. Continue routine changes necessary for an authorized upgrade, including removals required by the repository support policy; ask only when a decision changes scope, drops compatibility inside the agreed policy, or affects an external system beyond that authorization.
 - No fixes unrelated to the upgrade (like linting/formatting), unless required for the QA checks to pass.
 - If a change is ambiguous, choose the option with the least technical debt. Ask for further input if needed.
 - When there are issues that seem like bugs in the dependencies, encourage the user to report back with feedback for maintainers based on the guidance of the upstream dependency. See [Wagtail contributing guidance](https://docs.wagtail.org/en/latest/contributing/index.html.md).
@@ -43,7 +43,7 @@ To detect from the context or request from the user if unclear:
 - Current versions of Python, Django, Wagtail. Default: read from `pyproject.toml` or `requirements.txt` files, or lockfiles
 - Target version for Wagtail. Default: assume "latest", fetch the [release schedule](https://github.com/wagtail/wagtail/wiki/Release-schedule) and check which version is latest based on the current date.
 - Current dependencies management tool: `pip` / `poetry` / `uv`. Default: detect from README / contributor docs
-- Upgrade strategy for packages vs. apps/sites: check whether we want to switch to only the new version, or add it in an existing version range. Default: upgrade to version if the current project is a site/app, extend range if it’s a package.
+- Upgrade strategy for this package: follow the [platform support policy](../../../AGENTS.md#platform-support-policy). Support the latest stable Wagtail release and all feature releases back through the preceding LTS, dropping older series during a support refresh. Do not retain historical minimums by default. Explicit user targets take precedence. For sites/apps, upgrade to the requested target version.
 - Optional: high-level understanding of the project’s customizations likely to be impacted. Default: determine later based on your own review.
 
 ### Reference data sources
@@ -108,7 +108,7 @@ To adapt from the specifics of the project:
 - [ ] Fetch [Upgrading Wagtail](https://docs.wagtail.org/en/latest/releases/upgrading.html.md) and use its table to confirm which releases are along the upgrade path, from current to target.
 - [ ] From the table, ensure Django/Python versions meet the target Wagtail version’s compatibility requirements.
 - [ ] Report the upgrade path to the user
-- [ ] Include required Python / Django changes in the plan. For execution, resolve compatible dependency updates within scope; ask if resolving a mismatch requires dropping promised support or changing the deployment environment beyond authorization.
+- [ ] Include required Python / Django changes in the plan. For execution, resolve compatible dependency updates within scope; ask if resolving a mismatch requires dropping support inside the agreed policy or changing the deployment environment beyond authorization.
 
 Follow the intermediate steps required by the official upgrade guidance. In planning mode, describe those steps without executing them. In execution mode, verify each intermediate upgrade before continuing; do not require repeated confirmation for work already authorized.
 
@@ -153,7 +153,7 @@ Note any warnings or errors from package managers or from the project’s QA too
 - [ ] Fix smaller API changes first, bigger ones after.
 - [ ] Add / adjust tests if behavior truly changed and the project should follow new defaults in Wagtail.
 - [ ] Update corresponding documentation for any behavior changes.
-- [ ] If the current project is a package - consider whether some of those changes should be wrapped in a conditional version check, to preserve compatibility with older versions.
+- [ ] For this package, retain compatibility checks only where needed by versions inside the agreed support policy; remove checks whose consumers are outside it.
 - [ ] Report what code changes you did / are doing to the user.
 
 ### Update documentation

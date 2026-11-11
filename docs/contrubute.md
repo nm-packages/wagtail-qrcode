@@ -85,6 +85,12 @@ You can use the commands in the Make file to conveniently run various commands.
 
 ## Testing
 
+Follow the [platform support policy](../AGENTS.md#platform-support-policy):
+support all stable Python releases that have not reached end of life, and
+Django and Wagtail releases from the preceding LTS through the latest stable
+release. Test only mutually compatible combinations. See the
+[current matrix and upgrade notes](platform-upgrade.md).
+
 The app uses django tests and has `tox` setup for running them against the compatible Wagtail and Django versions.
 
 Run:

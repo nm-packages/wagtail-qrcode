@@ -6,22 +6,25 @@ description: Plan or implement Python version upgrades for wagtail-qrcode, inclu
 # Python Upgrade
 
 Use the [repository guidelines](../../../AGENTS.md) for contributor commands and
-Git conventions. This is a reusable package: adding support for a newer Python
-version normally preserves the existing minimum and supported framework versions.
+Git conventions and the [platform support policy](../../../AGENTS.md#platform-support-policy).
+Support all stable Python releases that have not reached upstream end of life,
+including those receiving security fixes only. A Python support refresh adds new
+stable releases and removes EOL releases; do not preserve historical minimums by
+default. Keep framework combinations within their own support policy.
 
 ## Establish the intended support range
 
 Distinguish adding a Python version from raising the minimum version or fixing a
 failure on an already supported interpreter. Read the current declarations rather
 than assuming that the developer's active interpreter defines package support.
-For an unspecified target, inspect the current range and clarify the intended
-version before changing it. For a request for "latest", verify the latest stable
-release against the current date; treat prerelease support as a separate choice.
+For an unspecified support refresh, verify the latest stable release and all
+non-EOL branches against the current date, then apply the repository policy.
+Explicit user targets take precedence; treat prerelease support separately.
 
 For planning or audit requests, inspect and report without changing files,
 installing dependencies, or creating environments. For an authorized upgrade,
 continue the necessary local changes and checks. Ask only when a decision would
-drop promised support or materially expand the requested upgrade.
+drop support inside the agreed policy or materially expand the requested upgrade.
 
 Inspect these sources together:
 
@@ -68,9 +71,10 @@ within the agreed scope.
 
 Keep the changes focused on interpreter compatibility:
 
-- Adding a newer interpreter does not require raising `requires-python` or
-  Black's syntax target. Add its classifier and matching tox and CI coverage.
-- When the user authorizes raising the minimum, align `requires-python`,
+- Adding a newer interpreter alone does not require raising `requires-python`
+  or Black's syntax target. Add its classifier and matching tox and CI coverage.
+- When the rolling policy removes EOL releases, or the user explicitly changes
+  the minimum, align `requires-python`,
   classifiers, tox, CI, formatter targets, and documentation, including the
   compatibility instruction in `AGENTS.md`. Remove compatibility shims only when
   their supported consumers have been removed.

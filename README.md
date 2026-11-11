@@ -12,6 +12,15 @@ This package can be used to create a page in Wagtail CMS that has a correspondin
 
 ## Installation
 
+### Compatibility
+
+Python 3.11–3.15, Django 5.2 LTS–6.1 and Wagtail 7.4 LTS–8.1 are supported in
+compatible combinations. We support Python releases that have not reached end
+of life, and framework releases from the preceding LTS through the latest
+stable release. See the
+[tested combinations and upgrade notes](docs/platform-upgrade.md) before
+choosing versions; newer frameworks require newer Python versions.
+
 To add the package to your own Wagtail CMS
 
 **Install the package into your environment.**

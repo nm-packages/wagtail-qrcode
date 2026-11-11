@@ -41,10 +41,13 @@ may not yield one. Explain any difference between the newest individual releases
 and the newest compatible combination. If targets are missing and cannot be
 inferred, inspect first and clarify the decision before changing support policy.
 
-Preserve existing support unless the request authorizes its removal. End of
-upstream support is evidence to report, not automatic permission to raise this
-package's minimum. If explicit targets conflict, explain the constraints and
-present viable choices rather than silently changing the user's targets.
+Apply the repository's [platform support policy](../../../AGENTS.md#platform-support-policy):
+all stable, non-EOL Python releases, and each framework's latest stable release
+back through the preceding LTS, using mutually compatible combinations. A
+platform upgrade includes removing versions outside this rolling policy; do not
+default to preserving historical minimums or ask again to apply the policy.
+Explicit user targets take precedence. If they conflict, explain the constraints
+and present viable choices rather than silently changing the user's targets.
 
 ## Work out the compatibility path
 
@@ -62,8 +65,9 @@ environment and its validation limits; do not claim an unsupported intermediate
 combination is a supported upgrade path.
 
 Distinguish temporary environments used to diagnose an upgrade from the final
-support matrix for this reusable package. Preserve valid retained combinations,
-and avoid an unrestricted cross product of framework and interpreter versions.
+support matrix for this reusable package. Preserve valid combinations inside the
+agreed support policy and avoid an unrestricted cross product of framework and
+interpreter versions.
 
 ## Execute the component work as one change
 

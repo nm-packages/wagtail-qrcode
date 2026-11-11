@@ -10,6 +10,8 @@ https://docs.djangoproject.com/en/stable/ref/settings/
 
 import os
 
+from django import VERSION as DJANGO_VERSION
+
 # Build paths inside the project like this: os.path.join(PROJECT_DIR, ...)
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR = os.path.dirname(PROJECT_DIR)
@@ -25,7 +27,12 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+if DJANGO_VERSION >= (6, 1):
+    MAILERS = {
+        "default": {"BACKEND": "django.core.mail.backends.console.EmailBackend"},
+    }
+else:
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 
 # Application definition
