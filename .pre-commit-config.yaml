@@ -16,6 +16,8 @@ repos:
     hooks:
         - id: pymarkdown
           args:
+              - --set
+              - 'extensions.front-matter.enabled=$!True'
               - --disable-rules
               - line-length
               - scan

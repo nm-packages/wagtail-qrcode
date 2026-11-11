@@ -1,0 +1,3 @@
+interface:
+  display_name: "Development"
+  short_description: "Develop and verify changes to wagtail-qrcode"
