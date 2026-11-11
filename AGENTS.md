@@ -38,6 +38,14 @@ Use Django's `TestCase`, naming files `test_*.py` and methods `test_*`. Add regr
   planning, implementing, and verifying package changes.
 - [Code Review](.agents/skills/code-review/SKILL.md) for
   requested reviews and reporting findings with evidence.
+- [Python upgrade](.agents/skills/python-upgrade/SKILL.md) for adding Python
+  version support, raising the minimum version, or resolving interpreter
+  compatibility failures.
+- [Django upgrade](.agents/skills/django-upgrade/SKILL.md) for adding Django
+  release support, raising its minimum version, or resolving Django deprecations.
+- [Platform upgrade](.agents/skills/platform-upgrade/SKILL.md) for coordinating
+  Python, Django, and Wagtail upgrades through one compatibility plan. Each
+  component upgrade skill can also be used independently.
 
 ## Wagtail Skills
 
