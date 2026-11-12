@@ -109,7 +109,7 @@ runs the full test suite on these three Django/Wagtail pairs:
 
 This selects 34 environments per workflow run, covering every supported Django
 and Wagtail release on both server databases. Python/driver combinations outside
-this selection are not covered by CI. Plain `tox` uses the same 34 environments;
+this selection are not covered by CI. Plain `uv run --locked tox` uses the same 34 environments;
 CI selects from this list by Python version and database. All 84 supported
 combinations remain available through explicit `tox -e` selections for release
 checks and database-specific investigations.
@@ -124,22 +124,22 @@ tests check the generated document's identity and deletion without assuming
 that database sequences reset between tests.
 
 ```bash
-tox list
-tox -f sqlite
-tox -f postgres
-tox -f mysql
-tox -e py311-dj52-wt74-sqlite
-tox -e py315-dj61-wt81-sqlite
-tox -e py315-dj61-wt81-postgres,py315-dj61-wt81-mysql
+uv run --locked tox list
+uv run --locked tox -f sqlite
+uv run --locked tox -f postgres
+uv run --locked tox -f mysql
+uv run --locked tox -e py311-dj52-wt74-sqlite
+uv run --locked tox -e py315-dj61-wt81-sqlite
+uv run --locked tox -e py315-dj61-wt81-postgres,py315-dj61-wt81-mysql
 ```
 
 To run all 84 supported combinations explicitly:
 
 ```bash
-tox -e 'py{311,312,313,314}-dj52-wt{74,80,81}-{sqlite,postgres,mysql}'
-tox -e 'py{312,313,314}-dj60-wt{74,80,81}-{sqlite,postgres,mysql}'
-tox -e 'py{312,313,314}-dj61-wt{80,81}-{sqlite,postgres,mysql}'
-tox -e 'py315-dj61-wt81-{sqlite,postgres,mysql}'
+uv run --locked tox -e 'py{311,312,313,314}-dj52-wt{74,80,81}-{sqlite,postgres,mysql}'
+uv run --locked tox -e 'py{312,313,314}-dj60-wt{74,80,81}-{sqlite,postgres,mysql}'
+uv run --locked tox -e 'py{312,313,314}-dj61-wt{80,81}-{sqlite,postgres,mysql}'
+uv run --locked tox -e 'py315-dj61-wt81-{sqlite,postgres,mysql}'
 ```
 
 Tox skips missing interpreters by default. Inspect summaries and installed

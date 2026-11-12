@@ -24,19 +24,11 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: "3.11"
-      - name: Install pinned Ruff
-        run: |
-          python - <<'PYTHON'
-          import subprocess
-          import tomllib
-          from pathlib import Path
-
-          project = tomllib.loads(Path("pyproject.toml").read_text())
-          subprocess.check_call([
-              "python", "-m", "pip", "install",
-              *project["project"]["optional-dependencies"]["development"],
-          ])
-          PYTHON
+      - uses: astral-sh/setup-uv@v9
+        with:
+          version: "0.12.10"
+      - name: Sync locked dependencies
+        run: uv sync --locked
       - name: Check lint and formatting
         run: make lint
 
@@ -52,12 +44,13 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python }}
+      - uses: astral-sh/setup-uv@v9
+        with:
+          version: "0.12.10"
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install tox tox-gh-actions
+        run: uv sync --locked --only-group dev
       - name: Test with tox
-        run: tox
+        run: uv run --locked --only-group dev tox
         env:
           DATABASE: ${{ matrix.database }}
 
@@ -83,15 +76,15 @@ jobs:
         with:
           python-version: "3.14"
 
+      - uses: astral-sh/setup-uv@v9
+        with:
+          version: "0.12.10"
       - name: Install dependencies
         id: install-dependencies
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install tox tox-gh-actions
+        run: uv sync --locked --only-group dev
       - name: Test with tox
         id: test-with-tox
-        run: |
-          tox
+        run: uv run --locked --only-group dev tox
         env:
           DB_NAME: postgres
           DB_USER: postgres
@@ -124,15 +117,15 @@ jobs:
         with:
           python-version: "3.14"
 
+      - uses: astral-sh/setup-uv@v9
+        with:
+          version: "0.12.10"
       - name: Install dependencies
         id: install-dependencies
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install tox tox-gh-actions
+        run: uv sync --locked --only-group dev
       - name: Test with tox
         id: test-with-tox
-        run: |
-          tox
+        run: uv run --locked --only-group dev tox
         env:
           DB_NAME: test
           DB_USER: root

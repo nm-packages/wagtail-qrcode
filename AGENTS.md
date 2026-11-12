@@ -8,23 +8,25 @@
 
 ## Build, Test, and Development Commands
 
-Create and activate a virtual environment, then run:
+Install [uv](https://docs.astral.sh/uv/getting-started/installation/) 0.12.10 or newer, then run:
 
 ```bash
-pip install -e ".[development,testing]"
+uv sync --locked
 make migrate
 make admin
 make run
 ```
 
-These commands install the package in editable mode with its development and testing dependencies, initialize the example database, create an `admin` user, and serve the test site at `http://localhost:8000`. The generated `admin`/`admin` credentials are for local development only.
+These commands create `.venv` and install the editable package and locked contributor tools, initialize the example database, create an `admin` user, and serve the test site at `http://localhost:8000`. The generated `admin`/`admin` credentials are for local development only.
 
 - `make test`: run Django tests with coverage and print missing lines.
-- `python manage.py test tests.test_cls`: run one test module.
-- `tox`: run the configured Python/Django/Wagtail/database matrix; install `tox` separately. PostgreSQL and MySQL environments require database services and drivers.
+- `uv run --locked python manage.py test tests.test_cls`: run one test module.
+- `uv run --locked tox`: run the configured Python/Django/Wagtail/database matrix using tox-uv. PostgreSQL and MySQL environments require database services and drivers.
 - `make format`: apply Ruff lint fixes, import sorting, and Python/Markdown code formatting.
 - `make lint`: check Ruff lint and formatting without changing files.
-- `pre-commit run --all-files`: run configured code and Markdown checks; install `pre-commit` separately.
+- `uv run --locked pre-commit run --all-files`: run configured code and Markdown checks.
+
+Use `uv add --dev <tool>` for contributor dependencies and `uv add <package>` for runtime dependencies. Commit `pyproject.toml` and `uv.lock` together. Use `uv lock --upgrade-package <name>` for targeted lock updates and `uv lock --check` to check freshness. The development lock does not constrain tox framework versions.
 
 ## Coding Style & Naming Conventions
 

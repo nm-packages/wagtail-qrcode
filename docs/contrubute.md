@@ -49,18 +49,47 @@ during release preparation.
 git clone --branch main https://github.com/nm-packages/wagtail-qrcode
 ```
 
-## Setup a virtual environment
+## Install uv and sync dependencies
+
+Install [uv](https://docs.astral.sh/uv/getting-started/installation/) 0.12.10 or
+newer, then run:
 
 ```bash
-python3 -m venv venv
-source venv/bin/activate
+uv sync --locked
 ```
 
-## Install the package into your virtual environment
+This creates `.venv` and installs the package in editable mode, together with
+Ruff, coverage, pre-commit, tox and its plugins from `uv.lock`. No activation is
+needed: Make targets use `uv run --locked`. To choose an interpreter explicitly,
+use `uv sync --locked --python 3.11` (or another supported Python version).
+
+The former `development` and `testing` extras are replaced by the `dev`
+dependency group. Existing contributors should switch to the commands above.
+Normal installation of the published package with pip remains supported.
+
+### Updating dependencies
+
+Use `uv add <package>` for runtime dependencies and `uv add --dev <tool>` for
+contributor tools; use `uv remove` (with `--dev` for tools) to remove them.
+Commit `pyproject.toml` and `uv.lock` together. For a targeted version refresh:
 
 ```bash
-pip install -e ".[development,testing]"
+uv lock --upgrade-package coverage
+uv sync --locked
+uv lock --check
 ```
+
+Use `uv lock --upgrade` only for an intentional refresh of all locked versions.
+Ruff's dependency pin, `required-version`, and pre-commit revision must still
+agree. Run the checks below after dependency changes.
+
+The lock captures the contributor environment across supported Python versions.
+Tox uses the locked tooling but resolves each environment's framework constraints
+independently through tox-uv, so the development lock cannot collapse the matrix
+to one Django/Wagtail pair. Database drivers remain specific to tox environments.
+
+Build distributions with `uv build`; setuptools includes the package's admin
+templates via `MANIFEST.in`.
 
 ## Setup the testing app
 
@@ -86,15 +115,15 @@ You can use the commands in the Make file to conveniently run various commands.
 
 ## Formatting and linting
 
-Reinstall `pip install -e ".[development,testing]"` to get the pinned Ruff version.
+Run `uv sync --locked` to install the locked contributor tools.
 Run `make format` before committing and `make lint` to run the same checks as CI.
-Install `pre-commit` separately, then run `pre-commit install` to enable hooks and
-`pre-commit run --all-files` to check all tracked files, including Markdown prose.
+Run `uv run --locked pre-commit install` to enable hooks and
+`uv run --locked pre-commit run --all-files` to check all tracked files, including Markdown prose.
 Ruff lint fixes run before formatting; PyMarkdown remains the Markdown checker.
 
 Ruff replaces Black, isort, Flake8 and blacken-docs. The development dependency,
 `required-version` and pre-commit hook revision must be updated together. CI
-installs the development tools directly from `pyproject.toml` to use the same pin.
+uses `uv sync --locked` to install the same tools and reject a stale lockfile.
 
 The formatter targets Python 3.11 and 88 columns. Linting enables Ruff's stable
 `E`/`W` (pycodestyle), `F` (Pyflakes), `C90` (McCabe), and `I` (import sorting)
@@ -130,13 +159,13 @@ The app uses django tests and has `tox` setup for running them against the compa
 Run:
 
 ```bash
-tox
+uv run --locked tox
 ```
 
 The default selection matches CI: all 28 SQLite combinations and three
 representative combinations each for PostgreSQL and MySQL, for 34 environments
 in total. Server database tests require running services and their connection
-settings. Use `tox -f sqlite` for SQLite only, or `tox -f postgres` / `tox -f mysql`
+settings. Use `uv run --locked tox -f sqlite` for SQLite only, or `uv run --locked tox -f postgres` / `uv run --locked tox -f mysql`
 for the three representative server database environments. See the
 [matrix guide](platform-upgrade.md#databases-and-validation) for explicit
 selections covering all 84 supported combinations.
