@@ -80,12 +80,7 @@ class WagtailQrCode:
         return eps_io
 
     def make_document(self, title, eps, collection):
-        doc = Document.objects.filter(title=title).first()
-
-        if doc:
-            # remove the document to create a replacement
-            doc.delete()
-
+        # Existing documents can still be referenced by live pages or revisions.
         doc = Document(
             title=title,
             file=File(eps, name=f"qr-code-{self.page.id}.eps"),
