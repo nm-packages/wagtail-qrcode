@@ -36,8 +36,10 @@ class TestWagtailHooks(TestCase):
         rev = test_page.save_revision()
         rev.publish()
 
+        document = get_document_model().objects.get()
         self.assertEqual(test_page.qr_code_svg[:4], "<svg")
-        self.assertEqual(test_page.qr_code_eps.id, 1)
+        self.assertEqual(test_page.qr_code_eps_id, document.pk)
+        self.assertEqual(document.title, test_page.title)
         self.assertEqual(test_page.qr_code_usage, 0)
 
     def test_send_qr_code_email(self):
@@ -112,11 +114,12 @@ class TestWagtailHooks(TestCase):
 
         generate_qr_code(request, test_page)
 
-        self.assertEqual(test_page.qr_code_eps.id, 1)
+        document_id = test_page.qr_code_eps_id
+        self.assertTrue(get_document_model().objects.filter(pk=document_id).exists())
 
         delete_document(request, test_page)
 
-        self.assertEqual(get_document_model().objects.count(), 0)
+        self.assertFalse(get_document_model().objects.filter(pk=document_id).exists())
 
     def test_delete_document_not_qrcode_page(self):
         request = RequestFactory().get("/")

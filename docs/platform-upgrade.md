@@ -99,6 +99,11 @@ Tox sets `DATABASE` from its database factor and forwards `DB_*` connection
 settings. Coverage files are isolated per environment. Start database services
 before invoking the PostgreSQL or MySQL environments.
 
+The test site enables `django.contrib.postgres` when PostgreSQL is selected,
+so Django can validate Wagtail's PostgreSQL search fields and indexes. Hook
+tests check the generated document's identity and deletion without assuming
+that database sequences reset between tests.
+
 ```bash
 tox list
 tox -f sqlite
@@ -130,4 +135,6 @@ Local validation on 11 November 2026:
   Setuptools reports existing license metadata deprecations during the build.
 - PostgreSQL and MySQL integration runs were not performed: neither database
   service nor the Docker daemon was running locally. Their 56 matrix entries
-  remain unverified; SQLite results do not establish database backend coverage.
+  were unverified in this initial local run; SQLite results do not establish
+  database backend coverage. See [PR #65's checks](https://github.com/nm-packages/wagtail-qrcode/pull/65/checks)
+  for subsequent database validation of each revision.
