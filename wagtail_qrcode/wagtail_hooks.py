@@ -30,6 +30,10 @@ def generate_qr_code(request, page):
     revision.content.update(qr_code_svg=svg, qr_code_eps=document.pk)
     revision.save(update_fields=["content"])
 
+    # Workflow approval may publish through a different page instance. Refresh
+    # only publication state so draft field values on this instance are preserved.
+    page.refresh_from_db(fields=["live", "live_revision"])
+
     # Live rows must retain their published QR assets when editing a draft.
     if not page.live or page.live_revision_id == revision.pk:
         type(page).objects.filter(pk=page.pk).update(

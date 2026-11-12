@@ -11,7 +11,7 @@ from django.test import RequestFactory, TestCase
 from django.urls import reverse
 from django.utils import timezone
 from wagtail.documents import get_document_model
-from wagtail.models import Page
+from wagtail.models import GroupApprovalTask, Page, Workflow, WorkflowPage, WorkflowTask
 
 from tests.testapp.models import QRCodePage
 from wagtail_qrcode.wagtail_hooks import generate_qr_code
@@ -206,6 +206,40 @@ class TestQRCodeEditor(TestCase):
         self.assertIn("<title>New QR page</title>", page.qr_code_svg)
         self.assertEqual(page.qr_code_eps.title, page.title)
         self.assert_email(page)
+
+    def test_workflow_approval_updates_live_qr(self):
+        workflow = Workflow.objects.create(name="QR review")
+        task = GroupApprovalTask.objects.create(name="Approve QR page")
+        WorkflowTask.objects.create(workflow=workflow, task=task, sort_order=0)
+        WorkflowPage.objects.create(workflow=workflow, page=self.page)
+
+        data = self.form_data("Submitted title", email=False)
+        data["action-submit"] = "Submit for moderation"
+        response = self.client.post(self.edit_url, data)
+        self.assertEqual(response.status_code, 302)
+        self.assert_live_unchanged()
+        count = self.page.revisions.count()
+
+        data = self.form_data("Approved title", email=False)
+        data.update(
+            {
+                "action-workflow-action": "1",
+                "workflow-action-name": "approve",
+                "workflow-task-state-id": self.page.current_workflow_task_state.pk,
+            }
+        )
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self.client.post(self.edit_url, data)
+        self.assertEqual(response.status_code, 302)
+        self.page.refresh_from_db()
+        self.assertEqual(self.page.title, "Approved title")
+        self.assertEqual(self.page.live_revision_id, self.page.latest_revision_id)
+        self.assertEqual(self.page.revisions.count(), count + 1)
+        revision_page = self.page.live_revision.as_object()
+        self.assertEqual(self.page.qr_code_eps_id, revision_page.qr_code_eps_id)
+        self.assertEqual(self.page.qr_code_svg, revision_page.qr_code_svg)
+        self.assertIn("<title>Approved title</title>", self.page.qr_code_svg)
+        self.assertEqual(self.page.qr_code_eps.title, self.page.title)
 
     def test_create_and_publish_generates_qr_before_email(self):
         url = reverse(
