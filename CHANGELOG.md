@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Adopt uv and a committed lockfile for contributor dependencies. Replace the development/testing extras with a `dev` dependency group; use `uv sync --locked` and `uv run --locked`. Make targets and CI use the locked tools, and tox uses uv while retaining its independent framework compatibility matrix.
+
+- Replace Black, isort, Flake8 and blacken-docs with pinned Ruff checks in development, pre-commit and CI. Run `uv sync --locked`; use `make format` to apply fixes and format Python/documentation examples, and `make lint` for non-mutating checks.
+
 - Update direct and chained page aliases with regenerated QR assets on publication, keeping draft and scheduled edits isolated until they go live.
 - Keep live QR assets aligned with the approved revision when approving page edits through a moderation workflow.
 - Prevent editor autosave from publishing QR page edits or sending EPS emails. Explicit draft saves and publication update the QR files and send the requested email once after saving, without creating an extra revision; retain existing EPS documents for published content and older revisions.

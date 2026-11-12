@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "wagtail-qrcode"
 version = "2.1.1"
@@ -34,40 +38,46 @@ dependencies =[
     "PyQRCode>=1,<2"
 ]
 
-[project.optional-dependencies]
-development = [
-    "black==24.10.0",
-    "flake8==7.1.1",
-    "isort==5.13.2",
-]
-testing = [
-  "coverage"
-]
-
 [project.urls]
 Repository = "https://github.com/wagtail-packages/wagtail-qrcode"
 Issues = "https://github.com/wagtail-packages/wagtail-qrcode/issues"
 Changelog = "https://github.com/nm-packages/wagtail-qrcode/blob/main/CHANGELOG.md"
 
 
-[tool.black]
+[tool.ruff]
+required-version = "==0.17.5"
+target-version = "py311"
 line-length = 88
-target-version = ['py311']
-include = '\.pyi?$'
-exclude = '''
-/(
-    \.eggs
-  | \.git
-  | \.hg
-  | \.mypy_cache
-  | \.tox
-  | \.venv
-  | _build
-  | buck-out
-  | build
-  | dist
-)/
-'''
+force-exclude = true
+extend-exclude = ["_build", "buck-out", "old", "bin"]
 
-[tool.isort]
-profile = "black"
+[tool.ruff.lint]
+select = ["E", "F", "W", "C90", "I"]
+# Leave indentation to the formatter; these checks can conflict with it.
+ignore = ["E111", "E114", "E117", "W191"]
+exclude = ["docs/"]
+
+[tool.ruff.lint.pycodestyle]
+max-line-length = 120
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.isort]
+known-first-party = ["tests", "wagtail_qrcode"]
+
+[dependency-groups]
+dev = [
+    "ruff==0.17.5",
+    "coverage",
+    "pre-commit",
+    "tox>=4",
+    "tox-gh-actions",
+    "tox-uv-bare>=1",
+]
+
+[tool.setuptools.packages.find]
+include = ["wagtail_qrcode*"]
+
+[tool.uv]
+required-version = ">=0.12.10"

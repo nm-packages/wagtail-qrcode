@@ -1,16 +1,12 @@
 repos:
-  - repo: https://github.com/pycqa/isort
-    rev: 5.13.2
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.17.5
     hooks:
-      - id: isort
-  - repo: https://github.com/psf/black
-    rev: 24.10.0
-    hooks:
-      - id: black
-  - repo: https://github.com/pycqa/flake8
-    rev: 7.1.1
-    hooks:
-      - id: flake8
+      - id: ruff-check
+        args: [--fix]
+        types_or: [python, pyi]
+      - id: ruff-format
+        types_or: [python, pyi, markdown]
   - repo: https://github.com/jackdewinter/pymarkdown
     rev: v0.9.26
     hooks:
@@ -21,9 +17,3 @@ repos:
               - --disable-rules
               - line-length
               - scan
-  - repo: https://github.com/adamchainz/blacken-docs
-    rev: "v1.12.1"  # replace with latest tag on GitHub
-    hooks:
-    -   id: blacken-docs
-        additional_dependencies:
-        - black==24.10.0
