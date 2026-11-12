@@ -85,6 +85,12 @@ You can use the commands in the Make file to conveniently run various commands.
 
 ## Testing
 
+Follow the [platform support policy](../AGENTS.md#platform-support-policy):
+support all stable Python releases that have not reached end of life, and
+Django and Wagtail releases from the preceding LTS through the latest stable
+release. Test only mutually compatible combinations. See the
+[current matrix and upgrade notes](platform-upgrade.md).
+
 The app uses django tests and has `tox` setup for running them against the compatible Wagtail and Django versions.
 
 Run:
@@ -92,3 +98,11 @@ Run:
 ```bash
 tox
 ```
+
+The default selection matches CI: all 28 SQLite combinations and three
+representative combinations each for PostgreSQL and MySQL, for 34 environments
+in total. Server database tests require running services and their connection
+settings. Use `tox -f sqlite` for SQLite only, or `tox -f postgres` / `tox -f mysql`
+for the three representative server database environments. See the
+[matrix guide](platform-upgrade.md#databases-and-validation) for explicit
+selections covering all 84 supported combinations.

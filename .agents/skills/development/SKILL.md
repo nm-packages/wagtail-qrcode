@@ -22,8 +22,9 @@ Resolve product or compatibility decisions that materially affect the outcome.
 
 - Check `pyproject.toml`, `tox.ini`, and the CI matrix for the applicable Python,
   Django, Wagtail, and database combinations. Verify framework behavior against
-  the version affected and preserve the existing supported range unless the
-  request changes it.
+  the version affected. Routine development preserves the declared range;
+  support refreshes apply the repository's rolling platform support policy,
+  including removing versions outside it. Explicit user targets take precedence.
 - Check how host sites configure and integrate the package before changing
   `QRCodeMixin`, public settings, admin hooks, or the scan redirect. Treat the
   example page in `tests/testapp/` as an integration fixture. Keep site-specific

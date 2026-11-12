@@ -12,20 +12,22 @@ upgrade is not a prerequisite.
 ## Establish the Django support policy
 
 Distinguish adding support for a release from raising the minimum or fixing a
-failure on an already supported release. This is a reusable package: preserve
-existing supported versions unless the request changes that policy. Read the
-declared and tested ranges rather than treating the active environment as the
-package's only supported combination.
+failure on an already supported release. Follow the repository's
+[platform support policy](../../../AGENTS.md#platform-support-policy): the latest
+stable Django release and all feature releases back through the preceding LTS.
+Remove older series as part of a support refresh; do not preserve historical
+minimums by default. Read the declared and tested ranges rather than treating
+the active environment as the package's only supported combination.
 
-Identify the target from the request and repository context. If it remains
-unspecified, inspect the current range and clarify before changing it. For
+Identify the target from the request and repository policy. For a support
+refresh without explicit targets, apply that policy without another approval. For
 "latest" or "latest LTS", verify the applicable stable release and support dates
 at the current date; do not silently substitute a prerelease.
 
 For planning or audit requests, inspect and report without modifying files,
 installing dependencies, creating environments, or applying migrations. For an
 authorized upgrade, continue necessary local work. Ask when resolving a conflict
-would drop promised compatibility or materially expand scope.
+would drop compatibility inside the agreed policy or materially expand scope.
 
 Read these sources together:
 
@@ -68,7 +70,8 @@ the package's advertised support policy.
 
 Choose valid Python/Django/Wagtail combinations instead of expanding every tox
 factor into an unsupported cross product. If a new Django release needs newer
-Python or Wagtail, retain valid old combinations and add suitable new ones.
+Python or Wagtail, retain valid combinations inside the support policy and add
+suitable new ones.
 Use [Python upgrade](../python-upgrade/SKILL.md) or
 [Wagtail upgrade](../wagtail-upgrade/SKILL.md) when those changes are needed within
 scope. Do not require the platform skill for a Django-only change.

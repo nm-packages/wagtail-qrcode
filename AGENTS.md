@@ -26,7 +26,26 @@ These commands install the package in editable mode with its development and tes
 
 ## Coding Style & Naming Conventions
 
-Use four-space Python indentation, `snake_case` functions/modules, and `PascalCase` classes. Preserve Python 3.9 compatibility. Format with Black (88 columns), sort imports with isort's Black profile, and lint with Flake8 (120-column limit, complexity limit 10). `.pre-commit-config.yaml` also checks Markdown and formats Python examples in documentation.
+Use four-space Python indentation, `snake_case` functions/modules, and `PascalCase` classes. Preserve Python 3.11 compatibility, the current minimum under the support policy below. Format with Black (88 columns), sort imports with isort's Black profile, and lint with Flake8 (120-column limit, complexity limit 10). `.pre-commit-config.yaml` also checks Markdown and formats Python examples in documentation.
+
+## Platform Support Policy
+
+- Support every stable Python release that has not reached upstream end of life,
+  including releases receiving security fixes only. Exclude prereleases.
+- For Django and Wagtail independently, support the latest stable release and
+  all intervening feature releases back to and including the preceding LTS
+  release. If the latest stable release is itself an LTS, retain the previous
+  LTS as the lower boundary.
+- Test only combinations supported by both frameworks and the interpreter.
+  Verify upstream compatibility tables, required patch versions and lifecycle
+  dates when upgrading; do not build an unrestricted version cross product.
+- A platform upgrade applies this rolling policy, including removing versions
+  outside it. Do not retain historical minimums by default or ask again for
+  approval to apply this policy. Explicit user targets take precedence.
+- Keep package requirements, classifiers, tox, CI, formatter targets and
+  documentation aligned. At November 2026 the ranges are Python 3.11–3.15,
+  Django 5.2 LTS–6.1 and Wagtail 7.4 LTS–8.1. See
+  [compatible combinations](docs/platform-upgrade.md) for the current matrix.
 
 ## Testing Guidelines
 
