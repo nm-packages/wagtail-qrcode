@@ -31,8 +31,10 @@ again on the next upgrade.
 
 ## Compatible combinations
 
-The complete tox matrix contains the following combinations for each of SQLite,
-PostgreSQL and MySQL: 28 combinations per backend, 84 environments in total.
+The supported combinations below can be used with SQLite, PostgreSQL and MySQL:
+28 combinations per backend, 84 in total. By default, tox and CI run all 28
+SQLite combinations and three representative combinations for each server
+database, as described under [databases and validation](#databases-and-validation).
 
 | Wagtail | Django | Python |
 | --- | --- | --- |
@@ -95,6 +97,23 @@ MySQL 8.4+, SQLite 3.37+, and psycopg2 2.9.9+ or mysqlclient 2.2.1+ for the
 selected drivers. See the [Django database requirements](https://docs.djangoproject.com/en/6.1/ref/databases/).
 These CI servers also support the retained Django releases.
 
+CI runs seven jobs: five Python jobs covering all 28 SQLite environments, one
+PostgreSQL job and one MySQL job. Each server database job uses Python 3.14 and
+runs the full test suite on these three Django/Wagtail pairs:
+
+| Django | Wagtail |
+| --- | --- |
+| 5.2 LTS | 7.4 LTS |
+| 6.0 | 8.0 |
+| 6.1 | 8.1 |
+
+This selects 34 environments per workflow run, covering every supported Django
+and Wagtail release on both server databases. Python/driver combinations outside
+this selection are not covered by CI. Plain `tox` uses the same 34 environments;
+CI selects from this list by Python version and database. All 84 supported
+combinations remain available through explicit `tox -e` selections for release
+checks and database-specific investigations.
+
 Tox sets `DATABASE` from its database factor and forwards `DB_*` connection
 settings. Coverage files are isolated per environment. Start database services
 before invoking the PostgreSQL or MySQL environments.
@@ -107,9 +126,20 @@ that database sequences reset between tests.
 ```bash
 tox list
 tox -f sqlite
+tox -f postgres
+tox -f mysql
 tox -e py311-dj52-wt74-sqlite
 tox -e py315-dj61-wt81-sqlite
 tox -e py315-dj61-wt81-postgres,py315-dj61-wt81-mysql
+```
+
+To run all 84 supported combinations explicitly:
+
+```bash
+tox -e 'py{311,312,313,314}-dj52-wt{74,80,81}-{sqlite,postgres,mysql}'
+tox -e 'py{312,313,314}-dj60-wt{74,80,81}-{sqlite,postgres,mysql}'
+tox -e 'py{312,313,314}-dj61-wt{80,81}-{sqlite,postgres,mysql}'
+tox -e 'py315-dj61-wt81-{sqlite,postgres,mysql}'
 ```
 
 Tox skips missing interpreters by default. Inspect summaries and installed

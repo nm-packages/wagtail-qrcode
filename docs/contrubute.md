@@ -98,3 +98,11 @@ Run:
 ```bash
 tox
 ```
+
+The default selection matches CI: all 28 SQLite combinations and three
+representative combinations each for PostgreSQL and MySQL, for 34 environments
+in total. Server database tests require running services and their connection
+settings. Use `tox -f sqlite` for SQLite only, or `tox -f postgres` / `tox -f mysql`
+for the three representative server database environments. See the
+[matrix guide](platform-upgrade.md#databases-and-validation) for explicit
+selections covering all 84 supported combinations.

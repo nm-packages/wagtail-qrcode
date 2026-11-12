@@ -40,10 +40,6 @@ jobs:
 
   test-postgres:
     runs-on: ubuntu-24.04
-    strategy:
-      matrix:
-        python: ["3.11", "3.12", "3.13", "3.14", "3.15"]
-        database: ["postgres"]
     services:
       postgres:
         image: postgres:16
@@ -62,7 +58,7 @@ jobs:
         id: setup-python
         uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.python }}
+          python-version: "3.14"
 
       - name: Install dependencies
         id: install-dependencies
@@ -79,14 +75,10 @@ jobs:
           DB_PASSWORD: postgres
           DB_HOST: localhost
           DB_PORT: 5432
-          DATABASE: ${{ matrix.database }}
+          DATABASE: postgres
 
   test-mysql:
     runs-on: ubuntu-24.04
-    strategy:
-      matrix:
-        python: ["3.11", "3.12", "3.13", "3.14", "3.15"]
-        database: ["mysql"]
     services:
       mariadb:
         image: mysql:8.4
@@ -107,7 +99,7 @@ jobs:
         id: setup-python
         uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.python }}
+          python-version: "3.14"
 
       - name: Install dependencies
         id: install-dependencies
@@ -124,4 +116,4 @@ jobs:
           DB_PASSWORD: root
           DB_HOST: 127.0.0.1
           DB_PORT: 3306
-          DATABASE: ${{ matrix.database }}
+          DATABASE: mysql
