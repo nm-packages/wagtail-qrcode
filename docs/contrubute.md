@@ -107,11 +107,17 @@ You can use the commands in the Make file to conveniently run various commands.
 
 - `make migrate` run migrations
 - `make run` run the development server
-- `make test` run the tests
+- `make test` run the package tests in `tests/`
 - `make admin` to quickly setup a superuser account with the above login details.
 - `make format` to apply Ruff lint fixes, sort imports, and format Python and Markdown code blocks
 - `make lint` to check lint and formatting without changing files
 - `make mail` to run a [docker container](mailhog.md) for `MailHog`
+
+The standalone sandbox uses its own settings and applications. Run its tests with
+`uv run --locked python sandbox/manage.py test home`. When invoking the root
+test runner directly, use `uv run --locked python manage.py test tests` to keep
+discovery within the package test suite. Tox defaults to the same suite; pass a
+specific test label with `uv run --locked tox -e <environment> -- tests.test_cls`.
 
 ## Formatting and linting
 

@@ -14,7 +14,7 @@ run:
 
 test:
 	@echo "Running tests..."
-	@uv run --locked coverage run manage.py test --deprecation all
+	@uv run --locked coverage run manage.py test tests --deprecation all
 	@uv run --locked coverage report -m
 
 mail:
