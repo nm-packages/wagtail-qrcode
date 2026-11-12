@@ -18,7 +18,7 @@ permissions:
 jobs:
 
   test-sqlite:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
         python: ["3.9", "3.10", "3.11", "3.12", "3.13"]
@@ -39,7 +39,7 @@ jobs:
           DATABASE: ${{ matrix.database }}
 
   test-postgres:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
         python: ["3.9", "3.10", "3.11", "3.12", "3.13"]
@@ -82,7 +82,7 @@ jobs:
           DATABASE: ${{ matrix.database }}
 
   test-mysql:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
         python: ["3.9", "3.10", "3.11", "3.12", "3.13"]

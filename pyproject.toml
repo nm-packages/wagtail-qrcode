@@ -47,7 +47,7 @@ testing = [
 [project.urls]
 Repository = "https://github.com/wagtail-packages/wagtail-qrcode"
 Issues = "https://github.com/wagtail-packages/wagtail-qrcode/issues"
-Changelog = "https://github.com/wagtail-packages/wagtail-qrcode/blob/release/CHANGELOG.md"
+Changelog = "https://github.com/nm-packages/wagtail-qrcode/blob/main/CHANGELOG.md"
 
 
 [tool.black]

@@ -172,6 +172,10 @@ WAGTAIL_QR_CODE = {
 
 If you would like to suggest an improvement to the package [contributions](docs/contrubute.md) are welcome
 
+Create working branches from `main` and target pull requests at `main`.
+Prepare and tag package releases from `main`.
+See the [branch workflow](docs/contrubute.md#branches-and-pull-requests) for details.
+
 ## Issues
 
 If you find an issue please consider [raising and issue](https://github.com/nickmoreton/wagtail-qrcode/issues)
