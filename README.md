@@ -112,6 +112,10 @@ Saving a draft of a live page keeps its published content and QR files unchanged
 New EPS documents are retained alongside older files so that published pages
 and saved revisions can continue to use their original documents.
 
+Published page aliases, including chained aliases, receive the source page's
+updated QR assets. Draft and scheduled edits leave aliases unchanged until
+publication.
+
 ### If you don't need to be able to send the qrcode via email your page model can be
 
 ```python

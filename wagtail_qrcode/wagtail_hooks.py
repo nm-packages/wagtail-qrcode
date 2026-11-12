@@ -39,6 +39,8 @@ def generate_qr_code(request, page):
         type(page).objects.filter(pk=page.pk).update(
             qr_code_svg=svg, qr_code_eps=document
         )
+        if page.live:
+            update_alias_qr_codes(page)
 
     if request.method == "POST" and issubclass(
         page.get_edit_handler().get_form_class(), QrCodeEmailForm
@@ -51,6 +53,26 @@ def generate_qr_code(request, page):
                 subject=email_form.cleaned_data["email_subject"],
                 body=email_form.cleaned_data["email_body"],
             )
+
+
+def update_alias_qr_codes(page):
+    """Sync QR assets after Wagtail has published the source and its aliases."""
+    parent_ids = [page.pk]
+    updated_ids = {page.pk}
+    while parent_ids:
+        aliases = (
+            type(page)
+            .objects.filter(alias_of_id__in=parent_ids)
+            .exclude(pk__in=updated_ids)
+        )
+        parent_ids = list(aliases.values_list("pk", flat=True))
+        if parent_ids:
+            # Only the QR fields changed after publication. Do not publish again
+            # or copy other content, which would repeat publication side effects.
+            type(page).objects.filter(pk__in=parent_ids).update(
+                qr_code_svg=page.qr_code_svg, qr_code_eps=page.qr_code_eps
+            )
+            updated_ids.update(parent_ids)
 
 
 def send_qr_code_email(page, email=None, subject=None, body=None):

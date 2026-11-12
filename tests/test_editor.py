@@ -12,6 +12,7 @@ from django.urls import reverse
 from django.utils import timezone
 from wagtail.documents import get_document_model
 from wagtail.models import GroupApprovalTask, Page, Workflow, WorkflowPage, WorkflowTask
+from wagtail.signals import page_published
 
 from tests.testapp.models import QRCodePage
 from wagtail_qrcode.wagtail_hooks import generate_qr_code
@@ -93,6 +94,7 @@ class TestQRCodeEditor(TestCase):
             data["overwrite_revision_id"] = result["revision_id"]
 
     def test_explicit_draft_save_keeps_live_content_and_emails_draft_qr_once(self):
+        alias = self.page.create_alias(parent=self.parent, update_slug="qr-alias")
         count = self.page.revisions.count()
         data = self.form_data()
         data["action-save-draft"] = "Save draft"
@@ -107,6 +109,10 @@ class TestQRCodeEditor(TestCase):
         self.assertEqual(draft.qr_code_eps.title, draft.title)
         self.assertEqual(self.page.revisions.count(), count + 1)
         self.assert_email(draft)
+        alias.refresh_from_db()
+        self.assertEqual(alias.title, "Published title")
+        self.assertEqual(alias.qr_code_svg, self.live_svg)
+        self.assertEqual(alias.qr_code_eps_id, self.live_document_id)
 
     def test_draft_save_with_unchanged_title_preserves_published_document(self):
         with self.captureOnCommitCallbacks(execute=True):
@@ -208,6 +214,7 @@ class TestQRCodeEditor(TestCase):
         self.assert_email(page)
 
     def test_workflow_approval_updates_live_qr(self):
+        alias = self.page.create_alias(parent=self.parent, update_slug="qr-alias")
         workflow = Workflow.objects.create(name="QR review")
         task = GroupApprovalTask.objects.create(name="Approve QR page")
         WorkflowTask.objects.create(workflow=workflow, task=task, sort_order=0)
@@ -240,6 +247,36 @@ class TestQRCodeEditor(TestCase):
         self.assertEqual(self.page.qr_code_svg, revision_page.qr_code_svg)
         self.assertIn("<title>Approved title</title>", self.page.qr_code_svg)
         self.assertEqual(self.page.qr_code_eps.title, self.page.title)
+        alias.refresh_from_db()
+        self.assertEqual(alias.qr_code_svg, self.page.qr_code_svg)
+        self.assertEqual(alias.qr_code_eps_id, self.page.qr_code_eps_id)
+
+    def test_publish_updates_qr_on_aliases_without_republishing(self):
+        alias = self.page.create_alias(parent=self.parent, update_slug="qr-alias")
+        chained_alias = alias.create_alias(
+            parent=self.parent, update_slug="chained-qr-alias"
+        )
+        published_ids = []
+
+        def record_publication(sender, instance, **kwargs):
+            published_ids.append(instance.pk)
+
+        page_published.connect(record_publication, sender=QRCodePage)
+        self.addCleanup(
+            page_published.disconnect, record_publication, sender=QRCodePage
+        )
+        data = self.form_data("Updated original", email=False)
+        data["action-publish"] = "Publish"
+        response = self.client.post(self.edit_url, data)
+        self.assertEqual(response.status_code, 302)
+        self.page.refresh_from_db()
+        self.assertIn("<title>Updated original</title>", self.page.qr_code_svg)
+        for alias_page in (alias, chained_alias):
+            alias_page.refresh_from_db()
+            self.assertEqual(alias_page.title, self.page.title)
+            self.assertEqual(alias_page.qr_code_svg, self.page.qr_code_svg)
+            self.assertEqual(alias_page.qr_code_eps_id, self.page.qr_code_eps_id)
+        self.assertCountEqual(published_ids, [self.page.pk, alias.pk, chained_alias.pk])
 
     def test_create_and_publish_generates_qr_before_email(self):
         url = reverse(
@@ -261,6 +298,7 @@ class TestQRCodeEditor(TestCase):
         self.assert_email(page)
 
     def test_scheduled_publish_preserves_live_revision_and_schedule(self):
+        alias = self.page.create_alias(parent=self.parent, update_slug="qr-alias")
         data = self.form_data()
         go_live_at = (timezone.now() + timedelta(days=1)).replace(microsecond=0)
         data.update(go_live_at=go_live_at.isoformat(), **{"action-publish": "Publish"})
@@ -273,6 +311,10 @@ class TestQRCodeEditor(TestCase):
         scheduled_page = revision.as_object()
         self.assertIn("<title>Edited title</title>", scheduled_page.qr_code_svg)
         self.assert_email(scheduled_page)
+        alias.refresh_from_db()
+        self.assertEqual(alias.title, "Published title")
+        self.assertEqual(alias.qr_code_svg, self.live_svg)
+        self.assertEqual(alias.qr_code_eps_id, self.live_document_id)
 
         with self.captureOnCommitCallbacks(execute=True):
             with patch(
@@ -286,6 +328,10 @@ class TestQRCodeEditor(TestCase):
         self.assertEqual(self.page.qr_code_eps_id, scheduled_page.qr_code_eps_id)
         self.assertEqual(self.page.qr_code_svg, scheduled_page.qr_code_svg)
         self.assertEqual(len(mail.outbox), 1)
+        alias.refresh_from_db()
+        self.assertEqual(alias.title, self.page.title)
+        self.assertEqual(alias.qr_code_svg, self.page.qr_code_svg)
+        self.assertEqual(alias.qr_code_eps_id, self.page.qr_code_eps_id)
 
     def test_rollback_sends_no_email(self):
         with self.captureOnCommitCallbacks(execute=True):
