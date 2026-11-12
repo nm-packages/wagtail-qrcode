@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+- Adopt uv and a committed lockfile for contributor dependencies. Replace the development/testing extras with a `dev` dependency group; use `uv sync --locked` and `uv run --locked`. Make targets and CI use the locked tools, and tox uses uv while retaining its independent framework compatibility matrix.
+
+- Replace Black, isort, Flake8 and blacken-docs with pinned Ruff checks in development, pre-commit and CI. Run `uv sync --locked`; use `make format` to apply fixes and format Python/documentation examples, and `make lint` for non-mutating checks.
+
+- Update direct and chained page aliases with regenerated QR assets on publication, keeping draft and scheduled edits isolated until they go live.
+- Keep live QR assets aligned with the approved revision when approving page edits through a moderation workflow.
+- Prevent editor autosave from publishing QR page edits or sending EPS emails. Explicit draft saves and publication update the QR files and send the requested email once after saving, without creating an extra revision; retain existing EPS documents for published content and older revisions.
+- Adopt a rolling support policy: Python releases that have not reached end of life, and Django and Wagtail releases from the preceding LTS through the latest stable release, using compatible combinations. The supported ranges are now Python 3.11–3.15, Django 5.2–6.1 and Wagtail 7.4–8.1; upgrade older installations to the new minimums.
+- Ensure tox selects the requested database backend and forwards its connection settings; use PostgreSQL 16 and MySQL 8.4 in CI for the expanded platform matrix.
+- Reduce CI to seven jobs and align plain `tox` with its 34 test environments: keep the full SQLite matrix and test three representative Django/Wagtail pairs on Python 3.14 for each of PostgreSQL and MySQL. Use explicit `tox -e` selections for all 84 supported combinations when needed.
+- Fix database test compatibility by enabling Django's PostgreSQL application for that backend and checking generated documents without assuming primary keys restart at one.
+- Use Django 6.1's `MAILERS` configuration in the example site and MailHog setup while preserving email settings for older Django versions.
+- Add repository skills for development, code review, Wagtail integration, and Python, Django, Wagtail, and combined platform upgrades.
+- Standardize contribution and release preparation on `main`; retire `release` from active development.
+- Add a PR template and contributor guidance for keeping descriptions and validation results current and recording notable changes in the changelog.
+- Fix the Django 5.1 tox dependency selector and pin CI runners to Ubuntu 24.04 for the existing Python test matrix.
+
 ## [2.1.1] - 2025-05-16
 
 - Test against Wagtail 5.2 - 6.3 and Django 4.2 - 5.1

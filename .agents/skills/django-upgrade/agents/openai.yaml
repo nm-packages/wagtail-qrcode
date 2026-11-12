@@ -1,0 +1,3 @@
+interface:
+  display_name: "Django Upgrade"
+  short_description: "Update and verify Django support in wagtail-qrcode"
