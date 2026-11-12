@@ -17,6 +17,29 @@ permissions:
 
 jobs:
 
+  lint:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+      - name: Install pinned Ruff
+        run: |
+          python - <<'PYTHON'
+          import subprocess
+          import tomllib
+          from pathlib import Path
+
+          project = tomllib.loads(Path("pyproject.toml").read_text())
+          subprocess.check_call([
+              "python", "-m", "pip", "install",
+              *project["project"]["optional-dependencies"]["development"],
+          ])
+          PYTHON
+      - name: Check lint and formatting
+        run: make lint
+
   test-sqlite:
     runs-on: ubuntu-24.04
     strategy:

@@ -80,8 +80,42 @@ You can use the commands in the Make file to conveniently run various commands.
 - `make run` run the development server
 - `make test` run the tests
 - `make admin` to quickly setup a superuser account with the above login details.
-- `make lint` to run pre-commit --all-files
+- `make format` to apply Ruff lint fixes, sort imports, and format Python and Markdown code blocks
+- `make lint` to check lint and formatting without changing files
 - `make mail` to run a [docker container](mailhog.md) for `MailHog`
+
+## Formatting and linting
+
+Reinstall `pip install -e ".[development,testing]"` to get the pinned Ruff version.
+Run `make format` before committing and `make lint` to run the same checks as CI.
+Install `pre-commit` separately, then run `pre-commit install` to enable hooks and
+`pre-commit run --all-files` to check all tracked files, including Markdown prose.
+Ruff lint fixes run before formatting; PyMarkdown remains the Markdown checker.
+
+Ruff replaces Black, isort, Flake8 and blacken-docs. The development dependency,
+`required-version` and pre-commit hook revision must be updated together. CI
+installs the development tools directly from `pyproject.toml` to use the same pin.
+
+The formatter targets Python 3.11 and 88 columns. Linting enables Ruff's stable
+`E`/`W` (pycodestyle), `F` (Pyflakes), `C90` (McCabe), and `I` (import sorting)
+rules, with a 120-column lint limit and maximum complexity of 10. `tests` and
+`wagtail_qrcode` are explicitly first-party imports. Existing build, environment,
+and legacy directory exclusions are retained; `docs/` is excluded from linting
+but its Python code blocks are formatted.
+
+Rule coverage is close rather than identical to Flake8: Ruff leaves some
+whitespace checks to the formatter, and preview-only rules are not enabled.
+The formatter-conflicting `E111`, `E114`, `E117`, and `W191` are disabled.
+The former `D203` ignore was inactive without a docstring plugin, and Ruff does
+not implement `W503`. Ruff's `E501` also exempts some long URLs and single words.
+Import ordering and formatting can differ slightly from isort and Black.
+See the [Ruff formatter documentation](https://docs.astral.sh/ruff/formatter/)
+and [compatibility notes](https://docs.astral.sh/ruff/faq/).
+
+Ruff 0.17.5 formats Python fenced code blocks in Markdown without preview mode;
+the formatter hook explicitly includes Markdown. Invalid Python blocks are
+skipped, so examples still need review. Markdown prose and shell blocks remain
+under PyMarkdown's existing checks.
 
 ## Testing
 

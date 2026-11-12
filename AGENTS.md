@@ -22,11 +22,13 @@ These commands install the package in editable mode with its development and tes
 - `make test`: run Django tests with coverage and print missing lines.
 - `python manage.py test tests.test_cls`: run one test module.
 - `tox`: run the configured Python/Django/Wagtail/database matrix; install `tox` separately. PostgreSQL and MySQL environments require database services and drivers.
-- `pre-commit run --all-files`: run configured code and Markdown checks; install `pre-commit` separately. There is currently no `make lint` target.
+- `make format`: apply Ruff lint fixes, import sorting, and Python/Markdown code formatting.
+- `make lint`: check Ruff lint and formatting without changing files.
+- `pre-commit run --all-files`: run configured code and Markdown checks; install `pre-commit` separately.
 
 ## Coding Style & Naming Conventions
 
-Use four-space Python indentation, `snake_case` functions/modules, and `PascalCase` classes. Preserve Python 3.11 compatibility, the current minimum under the support policy below. Format with Black (88 columns), sort imports with isort's Black profile, and lint with Flake8 (120-column limit, complexity limit 10). `.pre-commit-config.yaml` also checks Markdown and formats Python examples in documentation.
+Use four-space Python indentation, `snake_case` functions/modules, and `PascalCase` classes. Preserve Python 3.11 compatibility, the current minimum under the support policy below. Use the pinned Ruff version for formatting (88 columns), import sorting, and linting (120-column limit, complexity limit 10). `.pre-commit-config.yaml` also checks Markdown and formats Python examples in documentation.
 
 ## Platform Support Policy
 
