@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Update direct and chained page aliases with regenerated QR assets on publication, keeping draft and scheduled edits isolated until they go live.
+- Keep live QR assets aligned with the approved revision when approving page edits through a moderation workflow.
+- Prevent editor autosave from publishing QR page edits or sending EPS emails. Explicit draft saves and publication update the QR files and send the requested email once after saving, without creating an extra revision; retain existing EPS documents for published content and older revisions.
 - Adopt a rolling support policy: Python releases that have not reached end of life, and Django and Wagtail releases from the preceding LTS through the latest stable release, using compatible combinations. The supported ranges are now Python 3.11–3.15, Django 5.2–6.1 and Wagtail 7.4–8.1; upgrade older installations to the new minimums.
 - Ensure tox selects the requested database backend and forwards its connection settings; use PostgreSQL 16 and MySQL 8.4 in CI for the expanded platform matrix.
 - Reduce CI to seven jobs and align plain `tox` with its 34 test environments: keep the full SQLite matrix and test three representative Django/Wagtail pairs on Python 3.14 for each of PostgreSQL and MySQL. Use explicit `tox -e` selections for all 84 supported combinations when needed.

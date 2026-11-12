@@ -124,8 +124,10 @@ class TestWagtailQrCode(TestCase):
         qrc = pyqrcode.create("foo string")
         eps = io.StringIO()
         qrc.eps(eps, scale=3, quiet_zone=3)
-        instance.make_document("Foo Doc", eps, collection)
-        self.assertEqual(Document.objects.count(), 1)
+        new_document = instance.make_document("Foo Doc", eps, collection)
+        self.assertEqual(Document.objects.count(), 2)
+        self.assertNotEqual(new_document.pk, doc.pk)
+        self.assertTrue(Document.objects.filter(pk=doc.pk).exists())
 
     def test_make_document_not_exists(self):
         root_collection = Collection.get_first_root_node()

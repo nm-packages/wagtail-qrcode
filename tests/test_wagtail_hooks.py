@@ -57,12 +57,13 @@ class TestWagtailHooks(TestCase):
 
         generate_qr_code(request, test_page)
 
-        send_qr_code_email(
-            test_page,
-            email="foo@bar.com",
-            subject="QR Code for Test Page",
-            body="QR Code for Test Page",
-        )
+        with self.captureOnCommitCallbacks(execute=True):
+            send_qr_code_email(
+                test_page,
+                email="foo@bar.com",
+                subject="QR Code for Test Page",
+                body="QR Code for Test Page",
+            )
 
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].subject, "QR Code for Test Page")

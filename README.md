@@ -102,6 +102,20 @@ class QRCodePage(QRCodeMixin, Page):
 
 This will add a new tab in the page editor `QR Code` where you can preview the generated QR code and access the downloadable print ready EPS file. (the file can also be found in the documents app)
 
+Choose **Save draft** or **Publish** to generate or update the QR code. To email
+the EPS file, fill in the recipient, subject and body before choosing either
+action. The email uses the newly generated file and is sent after the save
+transaction commits. Autosave only saves draft content; it does not generate
+QR files, publish edits or send emails.
+
+Saving a draft of a live page keeps its published content and QR files unchanged.
+New EPS documents are retained alongside older files so that published pages
+and saved revisions can continue to use their original documents.
+
+Published page aliases, including chained aliases, receive the source page's
+updated QR assets. Draft and scheduled edits leave aliases unchanged until
+publication.
+
 ### If you don't need to be able to send the qrcode via email your page model can be
 
 ```python
