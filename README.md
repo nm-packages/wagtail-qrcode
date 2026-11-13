@@ -118,6 +118,12 @@ an ID. No document chooser or generated asset fields are needed on the page.
 Downloads and previews require Wagtail admin access and permission to edit that
 page, including for unpublished pages.
 
+Editors with permission to edit the page can choose **Reset scan count** beside
+the count and confirm to reset it to zero. The button is disabled at zero.
+Resetting takes effect immediately and preserves unsaved editor input; it does
+not save or publish the page or send email. It cannot be undone by restoring a
+revision. Subsequent scans start counting again from zero.
+
 To email an EPS, fill in the recipient, subject and body before choosing **Save
 draft** or **Publish**. The attachment is rendered in memory and sent after the
 save transaction commits. Autosave does not send email, and later workflow
