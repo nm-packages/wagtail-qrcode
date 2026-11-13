@@ -145,6 +145,19 @@ class QRCodePage(QRCodeMixin, Page):
     )
 ```
 
+### Create and apply migrations
+
+After adding `QRCodeMixin` to a page model, create and apply migrations for the
+app containing that model. Replace `your_app` with its Django app label:
+
+```bash
+python manage.py makemigrations your_app
+python manage.py migrate
+```
+
+This creates the database fields for the SVG, EPS document reference and usage
+count.
+
 ## URLS
 
 Include the wagtail-qrcode urls in your site urls before `wagtail_urls`.
