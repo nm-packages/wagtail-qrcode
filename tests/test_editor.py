@@ -79,9 +79,26 @@ class TestQRCodeEditor(TestCase):
         self.assertContains(response, "Download SVG")
         self.assertContains(response, "Download EPS")
         self.assertContains(response, "0 scans")
+        self.assertContains(response, "Reset scan count")
+        self.assertContains(response, "wagtail_qrcode/js/reset-scan-count.js")
+        self.assertContains(response, "disabled>")
         for name in ("qr_code_eps", "qr_code_svg", "qr_code_usage"):
             self.assertNotContains(response, f'name="{name}"')
         self.assertFalse(QRCode.objects.exists())
+
+    def test_reset_does_not_save_publish_or_email_editor_input(self):
+        QRCode.objects.create(page=self.page, usage_count=12)
+        revision_count = self.page.revisions.count()
+        response = self.client.get(self.edit_url)
+        reset_url = reverse("wagtail_qrcode_admin:reset", args=[self.page.pk])
+        self.assertContains(response, f'data-qr-reset-url="{reset_url}"')
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self.client.post(reset_url, self.form_data())
+        self.assertEqual(response.status_code, 200)
+        self.assert_live_unchanged()
+        self.assertEqual(self.page.revisions.count(), revision_count)
+        self.assertEqual(self.page.qr_code_usage, 0)
+        self.assertEqual(len(mail.outbox), 0)
 
     def test_repeated_autosave_keeps_live_content_and_sends_no_email(self):
         count = self.page.revisions.count()

@@ -18,6 +18,7 @@ class TestFieldPanels(TestCase):
         html, _ = self.render_panel(QRCodePage())
         self.assertIn("Save the page", html)
         self.assertNotIn("<img", html)
+        self.assertNotIn("Reset scan count", html)
         self.assertFalse(QRCode.objects.exists())
 
     def test_panel_is_read_only_with_preview_downloads_and_count(self):
@@ -31,6 +32,7 @@ class TestFieldPanels(TestCase):
                 html,
             )
         self.assertIn("42 scans", html)
+        self.assertNotIn("Reset scan count", html)
         for field in ("qr_code_svg", "qr_code_eps", "qr_code_usage"):
             self.assertNotIn(field, form.fields)
             self.assertNotIn(f'name="{field}"', html)
