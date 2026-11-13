@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% load wagtail_qrcode_tags %}
+{% block content %}
+<main>
+    <p><a href="/">Sandbox home</a> · <a href="{% url 'wagtailadmin_pages:edit' page.pk %}">Edit page and download QR</a></p>
+    <h1>{{ page.title }}</h1>
+    <div aria-label="QR code">{% qr_code_svg page %}</div>
+    <p><a href="{% url 'qr_code_page_view' %}?id={{ page.pk }}">Follow encoded redirect</a></p>
+    <p>Usage count: {{ page.qr_code_usage }}</p>
+</main>
+{% endblock %}
