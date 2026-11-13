@@ -28,6 +28,18 @@ Pixelmator may reject standard EPS, so use SVG there. Repeated downloads create
 no Documents, counter rows or server-side QR files. EPS export timestamps may
 differ between requests.
 
+### Reset the scan count
+
+On a disposable QR page, follow its scan URL to make the count positive. Open
+the editor, change the title without saving, and choose **Reset scan count**.
+Cancel once, then confirm. Check that the count changes to zero, a success
+message appears and the button becomes disabled. The unsaved title must remain
+in the editor. Confirm no revision or email was created, then scan again and
+reload the editor to see one scan. At zero the button is disabled. Repeat on a
+saved draft with an existing count. A user without permission to edit the page
+must not be able to reset it. If the reset request fails, the count must stay
+unchanged and the button must allow a retry.
+
 Open the preview or download URL in a signed-out/private browser.
 
 **Expected:** Admin login is required. A user who can access admin but cannot edit

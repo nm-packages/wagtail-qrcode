@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
-from django.test import TestCase
+from django.test import Client, TestCase
 from django.urls import reverse
 from wagtail.documents import get_document_model
 from wagtail.models import GroupPagePermission, Page, PageViewRestriction
@@ -170,3 +170,77 @@ class TestViews(TestCase):
         ):
             url = reverse("wagtail_qrcode_admin:download", args=[page_id, file_format])
             self.assertEqual(self.client.get(url).status_code, 404)
+
+    def test_reset_count_without_editor_side_effects(self):
+        self.client.force_login(self.admin)
+        record = QRCode.objects.create(page=self.page, usage_count=42)
+        QRCode.objects.create(page=self.other, usage_count=7)
+        revision_ids = list(self.page.revisions.values_list("pk", flat=True))
+        url = reverse("wagtail_qrcode_admin:reset", args=[self.page.pk])
+        with patch.object(QRCodePage, "save", side_effect=AssertionError("page saved")):
+            response = self.client.post(url)
+        self.assertEqual(response.json()["usage_count"], 0)
+        record.refresh_from_db()
+        self.assertEqual(record.usage_count, 0)
+        self.assertEqual(self.other.qr_code_record.usage_count, 7)
+        self.assertEqual(
+            list(self.page.revisions.values_list("pk", flat=True)), revision_ids
+        )
+        self.assertIn("no-store", response["Cache-Control"])
+        self.scan(self.page)
+        self.assertEqual(self.page.qr_code_usage, 1)
+
+    def test_reset_missing_counter_and_draft_page(self):
+        self.client.force_login(self.admin)
+        self.page.unpublish()
+        url = reverse("wagtail_qrcode_admin:reset", args=[self.page.pk])
+        for _ in range(2):
+            self.assertEqual(self.client.post(url).json()["usage_count"], 0)
+        self.assertFalse(QRCode.objects.exists())
+
+    def test_reset_requires_post_csrf_and_edit_permission(self):
+        url = reverse("wagtail_qrcode_admin:reset", args=[self.page.pk])
+        record = QRCode.objects.create(page=self.page, usage_count=42)
+        self.assertEqual(self.client.post(url).status_code, 302)
+        user = get_user_model().objects.create_user("reset-editor", password="password")
+        group = Group.objects.create(name="Reset editors")
+        group.permissions.add(Permission.objects.get(codename="access_admin"))
+        user.groups.add(group)
+        self.client.force_login(user)
+        self.assertEqual(
+            self.client.post(
+                url, headers={"X-Requested-With": "XMLHttpRequest"}
+            ).status_code,
+            403,
+        )
+        GroupPagePermission.objects.create(
+            group=group,
+            page=self.page,
+            permission=Permission.objects.get(
+                content_type__app_label="wagtailcore", codename="change_page"
+            ),
+        )
+        self.assertEqual(self.client.get(url).status_code, 405)
+        csrf_client = Client(enforce_csrf_checks=True)
+        csrf_client.force_login(user)
+        self.assertEqual(csrf_client.post(url).status_code, 403)
+        record.refresh_from_db()
+        self.assertEqual(record.usage_count, 42)
+        csrf_client.get(reverse("wagtailadmin_pages:edit", args=[self.page.pk]))
+        self.assertEqual(
+            csrf_client.post(
+                url,
+                headers={"X-CSRFToken": csrf_client.cookies["csrftoken"].value},
+            ).status_code,
+            200,
+        )
+        self.assertEqual(self.client.post(url).status_code, 200)
+        user.is_active = False
+        user.save()
+        self.assertEqual(self.client.post(url).status_code, 302)
+
+    def test_reset_rejects_invalid_targets(self):
+        self.client.force_login(self.admin)
+        for page_id in (self.other.pk, 999999):
+            url = reverse("wagtail_qrcode_admin:reset", args=[page_id])
+            self.assertEqual(self.client.post(url).status_code, 404)
