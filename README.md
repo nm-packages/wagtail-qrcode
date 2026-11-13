@@ -6,9 +6,11 @@ This package can be used to create a page in Wagtail CMS that has a correspondin
 
 ## Features
 
-- The generated QR Code is saved as an EPS document that can be printed. When scanned IT will link to the page via a redirect using the page ID
-- You can download the generated QR code and use it in printed advertising like posters, postcards, banners, beer mats and more.
-- When saving a draft or publishing a page you can add a one-time email address to send the qr-code to as an attachment.
+- Generate QR previews and SVG/EPS downloads on demand, without storing files or using Wagtail Documents.
+- Scan a URL containing the page ID to reach its current location, even after a title, slug or parent change.
+- Track successful scan redirects in a separate page-owned record, outside page revisions.
+- Email a generated EPS attachment on an explicit draft save or publication.
+- Give copies, translations and aliases their own QR identity based on their page ID.
 
 ## Installation
 
@@ -39,12 +41,22 @@ INSTALLED_APPS = [
 ]
 ```
 
+**Create the database tables.**
+
+```bash
+python manage.py migrate
+```
+
+The package owns a scan-counter table with a one-to-one relationship to Wagtail's
+base Page. A row is created on the first successful scan; previewing, downloading
+and emailing do not create records.
+
 **Add this setting to your Wagtail settings.**
 
 It is used to generate the base url for the QR code
 
 ```python
-WAGTAIL_QR_CODE_BASE_URL = "your-site-url"
+WAGTAIL_QR_CODE_BASE_URL = "https://example.com"
 ```
 
 You'll likely want to test the QRcode using another device. Your device will need to be able to resolve your testing domain and localhost probably won't work.
@@ -100,21 +112,27 @@ class QRCodePage(QRCodeMixin, Page):
     base_form_class = QrCodeEmailForm
 ```
 
-This will add a new tab in the page editor `QR Code` where you can preview the generated QR code and access the downloadable print ready EPS file. (the file can also be found in the documents app)
+This adds a `QR Code` tab with a read-only preview, **Download SVG** and
+**Download EPS** buttons, and the scan count. Save a new page first so that it has
+an ID. No document chooser or generated asset fields are needed on the page.
+Downloads and previews require Wagtail admin access and permission to edit that
+page, including for unpublished pages.
 
-Choose **Save draft** or **Publish** to generate or update the QR code. To email
-the EPS file, fill in the recipient, subject and body before choosing either
-action. The email uses the newly generated file and is sent after the save
-transaction commits. Autosave only saves draft content; it does not generate
-QR files, publish edits or send emails.
+To email an EPS, fill in the recipient, subject and body before choosing **Save
+draft** or **Publish**. The attachment is rendered in memory and sent after the
+save transaction commits. Autosave does not send email, and later workflow
+approval or scheduled publication does not repeat an earlier email request.
 
-Saving a draft of a live page keeps its published content and QR files unchanged.
-New EPS documents are retained alongside older files so that published pages
-and saved revisions can continue to use their original documents.
+Changing page content does not create or synchronise QR assets. Drafts and
+revisions use the same page identity; restoring a revision does not reset scan
+counts. Each copy, translation and alias uses its own page ID, including chained
+aliases. Deleting a page removes its counter record and leaves no QR files to
+clean up.
 
-Published page aliases, including chained aliases, receive the source page's
-updated QR assets. Draft and scheduled edits leave aliases unchanged until
-publication.
+This design is for new QR usage. Importing existing QR documents, counters or
+legacy revisions is outside the current implementation. Host page models that
+used the old mixin fields need schema migrations when those fields are removed;
+no legacy data conversion is provided.
 
 ### If you don't need to be able to send the qrcode via email your page model can be
 
@@ -159,17 +177,34 @@ urlpatterns = [
 ]
 ```
 
-or import the view and pass the view in the path function
+The named `qr_code_page_view` route is used when generating the QR payload, so a
+custom mount path is supported. If wiring the view directly, use that same name.
+For the example above, the payload is `https://example.com/qr-code/?id=123`.
+The base URL falls back to `WAGTAILADMIN_BASE_URL` if no QR base URL is set.
 
-```python
-from wagtail_qrcode.views import qr_code_page_view
+The scan endpoint redirects only live, QR-enabled pages. Private-page access is
+still enforced by Wagtail when the destination is opened. The counter measures
+redirects, including redirects to a private page's access prompt; it is not a
+count of unique visitors or confirmed content views. Invalid IDs and unpublished
+or non-QR pages return 404 without increasing a count.
 
-urlpatterns = [
-    # ...
-    path("qr-code/", qr_code_page_view, name="qr-code-view"),
-    # ...
-]
+Keep the scan domain and route reachable after printing. Newly generated codes
+use the current base URL; configuration changes do not change paper copies.
+Page IDs are stable within a database, but an export/import that remaps IDs does
+not preserve them automatically.
+
+### Optional public preview
+
+To render a QR directly in a page template:
+
+```html
+{% load wagtail_qrcode_tags %}
+{% qr_code_svg page %}
 ```
+
+This renders SVG in memory and does not require a document or an admin download
+URL. It produces no output for an unsaved page. QR generation in Python uses
+`WagtailQrCode(page).render("svg")` or `.render("eps")`, returning bytes.
 
 ## Configuration
 
@@ -177,19 +212,20 @@ Set the configuration (optional, these are the defaults)
 
 ```python
 WAGTAIL_QR_CODE = {
-    "collection_name": "QR Codes",
     "scale": 3,
     "quiet_zone": 6,
     "svg_has_xml_declaration": False,
-    "svg_has_doc_type_declaration": False,
 }
 ```
 
-- collection_name: is automatically created and used as the collection for all generated QR codes
 - scale: the size of the dots in the QR code
 - quiet_zone: the plain border around the QR code
 - svg_has_xml_declaration: does the QR code SVG have an XML declaration
-- svg_has_doc_type_declaration: does the QR code SVG have an HTML doc-type
+
+SVG output always includes the XML namespace needed for standalone images. The
+old `collection_name` and `svg_has_doc_type_declaration` options are removed.
+Rendering settings apply to the next preview, download or email; generated output
+is not archived.
 
 ## Contributing
 
