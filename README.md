@@ -208,7 +208,7 @@ created automatically. The collection name is currently fixed; setting
 - scale: the size of the dots in the QR code
 - quiet_zone: the plain border around the QR code
 - svg_has_xml_declaration: does the QR code SVG have an XML declaration
-- svg_has_doc_type_declaration: does the QR code SVG have an HTML doc-type
+- svg_has_doc_type_declaration: includes the SVG namespace (`xmlns="http://www.w3.org/2000/svg"`); despite its name, this does not add a doctype declaration
 
 ## Local demonstration
 
