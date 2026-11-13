@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add a persistent contributor sandbox with repeatable setup, published/draft examples, local email capture and isolated integration tests. Use `make sandbox-setup` and `make sandbox-run`; previews and SVG/EPS downloads are generated on demand without QR Documents. Package tests now use explicit `tests` discovery, and MailHog tooling is replaced by sandbox file capture. See the sandbox and smoke-test guides; `make sandbox-reset` explicitly discards manual sandbox data.
+
 - Adopt uv and a committed lockfile for contributor dependencies. Replace the development/testing extras with a `dev` dependency group; use `uv sync --locked` and `uv run --locked`. Make targets and CI use the locked tools, and tox uses uv while retaining its independent framework compatibility matrix.
 
 - Replace Black, isort, Flake8 and blacken-docs with pinned Ruff checks in development, pre-commit and CI. Run `uv sync --locked`; use `make format` to apply fixes and format Python/documentation examples, and `make lint` for non-mutating checks.

@@ -91,27 +91,37 @@ to one Django/Wagtail pair. Database drivers remain specific to tox environments
 Build distributions with `uv build`; setuptools includes the package's admin
 templates via `MANIFEST.in`.
 
-## Setup the testing app
+## Run the persistent sandbox
 
 ```bash
-make migrate && make admin && make run
+make sandbox-setup
+make sandbox-run
 ```
 
-The app can be viewed at <http://localhost:8000>
+Open <http://localhost:8000/> or <http://localhost:8000/admin/> and log in with
+`admin` / `admin`. Setup is repeatable and preserves edits and existing passwords.
+The [sandbox guide](sandbox.md) explains local configuration, captured email,
+optional device testing and the explicit `make sandbox-reset` operation.
+Use the [developer smoke tests](smoke-tests.md) to verify the manual workflows.
 
-You can log into the admin at <http://localhost:8000/admin> and use `admin` for the username & `admin` for the password.
+The root `manage.py`, `make migrate`, `make admin` and `make run` remain available
+for the older automated test fixture site. Use the `sandbox-` targets for manual
+testing so content, counts and captured email persist separately from the test suite;
+QR previews and downloads are generated in memory.
 
 ## Other commands
 
-You can use the commands in the Make file to conveniently run various commands.
+- `make test`: run package tests in `tests/` with coverage.
+- `make sandbox-test`: run sandbox integration tests with isolated database/media.
+- `make sandbox-email`: print the latest captured email and extract its EPS.
+- `make format`: apply Ruff fixes and format Python and Markdown code blocks.
+- `make lint`: check lint and formatting without changing files.
 
-- `make migrate` run migrations
-- `make run` run the development server
-- `make test` run the tests
-- `make admin` to quickly setup a superuser account with the above login details.
-- `make format` to apply Ruff lint fixes, sort imports, and format Python and Markdown code blocks
-- `make lint` to check lint and formatting without changing files
-- `make mail` to run a [docker container](mailhog.md) for `MailHog`
+When invoking the root test runner directly, use
+`uv run --locked python manage.py test tests` to keep discovery within the package
+suite. Sandbox tests use `uv run --locked python sandbox/manage.py test home`.
+Tox defaults to package tests; pass a specific label with
+`uv run --locked tox -e <environment> -- tests.test_cls`.
 
 ## Formatting and linting
 

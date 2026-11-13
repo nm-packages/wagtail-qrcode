@@ -80,9 +80,9 @@ customizations.
 At the time of the platform upgrade, no required changes were found to the
 package's publishing hooks or field panel APIs. The subsequent QR ownership
 redesign replaces document fields with a read-only preview and SVG/EPS downloads;
-rendering tests cover those controls, the usage count and recipient field. The example site and MailHog configuration
-use Django 6.1's `MAILERS` setting on that release and retain `EMAIL_BACKEND` for
-Django 5.2 and 6.0. Host sites should follow
+rendering tests cover those controls, the usage count and recipient field. The
+example site and sandbox email capture use Django 6.1's `MAILERS` setting on that
+release and retain `EMAIL_BACKEND` for Django 5.2 and 6.0. Host sites should follow
 [Django's email migration guidance](https://docs.djangoproject.com/en/6.1/topics/email/#migrating-email-to-mailers).
 
 Wagtail 8's optional custom base page models require separate adaptation of the

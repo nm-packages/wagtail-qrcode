@@ -227,6 +227,15 @@ old `collection_name` and `svg_has_doc_type_declaration` options are removed.
 Rendering settings apply to the next preview, download or email; generated output
 is not archived.
 
+## Local demonstration
+
+Run `uv sync --locked`, `make sandbox-setup` and `make sandbox-run` to explore
+this checkout at <http://localhost:8000/> (initial admin login: `admin` / `admin`).
+The persistent sandbox has published and draft examples using on-demand QR
+previews, SVG/EPS downloads and page-owned scan counts, without QR Documents.
+See the [sandbox guide](docs/sandbox.md) and [smoke tests](docs/smoke-tests.md)
+for email capture, test isolation, copies, aliases and device testing.
+
 ## Contributing
 
 If you would like to suggest an improvement to the package [contributions](docs/contrubute.md) are welcome
