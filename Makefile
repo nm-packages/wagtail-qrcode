@@ -1,4 +1,4 @@
-.PHONY: list sync migrate admin run test mail mail-stop format lint
+.PHONY: list sync migrate admin run test format lint
 list:
 	@LC_ALL=C $(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null | awk -v RS= -F: '/(^|\n)# Files(\n|$$)/,/(^|\n)# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' | sort | egrep -v -e '^[^[:alnum:]]' -e '^$@$$'
 
@@ -16,15 +16,6 @@ test:
 	@echo "Running tests..."
 	@uv run --locked coverage run manage.py test tests --deprecation all
 	@uv run --locked coverage report -m
-
-# Optional local mail capture; never overwrite local settings.
-mail:
-	@docker run -d -p 127.0.0.1:8025:8025 -p 127.0.0.1:1025:1025 --name mailhog mailhog/mailhog
-
-mail-stop:
-	@echo "Stopping mail server"
-	@docker stop mailhog
-	@docker rm mailhog
 
 format:
 	@uv run --locked ruff check --fix .

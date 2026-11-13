@@ -25,7 +25,6 @@ SANDBOX_DATA_DIR.mkdir(exist_ok=True)
 SANDBOX_BASE_URL = os.environ.get("SANDBOX_BASE_URL", "http://localhost:8000").rstrip(
     "/"
 )
-SANDBOX_MAIL = os.environ.get("SANDBOX_MAIL", "file")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -235,21 +234,16 @@ WAGTAIL_QR_CODE_BASE_URL = SANDBOX_BASE_URL
 DEFAULT_FROM_EMAIL = "sandbox@example.test"
 WAGTAILDOCS_EXTENSIONS += ["eps"]
 
-# Local capture only. Both paths preserve MIME attachments.
-if SANDBOX_MAIL == "file":
-    backend = "django.core.mail.backends.filebased.EmailBackend"
-    options = {"file_path": SANDBOX_DATA_DIR / "emails"}
-elif SANDBOX_MAIL == "smtp":
-    backend = "django.core.mail.backends.smtp.EmailBackend"
-    options = {"host": "127.0.0.1", "port": 1025}
-else:
-    raise ValueError("SANDBOX_MAIL must be 'file' or 'smtp'")
+# Capture messages locally, preserving MIME attachments.
 if DJANGO_VERSION >= (6, 1):
-    MAILERS = {"default": {"BACKEND": backend, "OPTIONS": options}}
+    MAILERS = {
+        "default": {
+            "BACKEND": "django.core.mail.backends.filebased.EmailBackend",
+            "OPTIONS": {"file_path": SANDBOX_DATA_DIR / "emails"},
+        }
+    }
 else:
-    EMAIL_BACKEND = backend
+    EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
     EMAIL_FILE_PATH = SANDBOX_DATA_DIR / "emails"
-    EMAIL_HOST = "127.0.0.1"
-    EMAIL_PORT = 1025
 
 TEST_RUNNER = "home.runner.SandboxTestRunner"

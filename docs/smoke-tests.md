@@ -2,7 +2,7 @@
 
 These checks exercise the persistent [local sandbox](sandbox.md). Run them in
 order against a fresh setup or explicitly reset first if you no longer need your
-manual content. Optional MailHog and device checks are marked below. Record the
+manual content. Optional device checks are marked below. Record the
 commit, browser, Python/Django/Wagtail versions and the result of each check.
 
 ## 1. Start, log in and confirm editable installation
@@ -129,14 +129,14 @@ before this cleanup when judging the autosave result.
 
 ## 8. Send and inspect an EPS email
 
-**Prerequisites:** Default file capture, or optional [MailHog](mailhog.md) running
-with `SANDBOX_MAIL=smtp`. Note the current document ID and existing messages.
+**Prerequisites:** The sandbox running with file capture. Note the current
+document ID and existing messages.
 
 **Actions:** Edit the QR page, change its title to `Email attachment check`, and
 enter recipient `reader@example.test`, subject `QR smoke test` and body
-`Please inspect this EPS.` Choose **Save draft**, then run `make sandbox-email`
-for file capture, or inspect <http://localhost:8025/> for MailHog. Download the
-new draft EPS from the editor and compare it with the extracted/email attachment.
+`Please inspect this EPS.` Choose **Save draft**, then run `make sandbox-email`.
+Download the new draft EPS from the editor and compare it with the extracted
+email attachment.
 For example, replace these paths with your downloads:
 
 ```bash
@@ -202,5 +202,4 @@ If the homepage cannot load on the phone, resolve network/tunnel access before
 judging QR generation.
 
 **Cleanup:** Restore localhost configuration if desired, repeat setup, restart
-and regenerate the QR assets. Stop any optional tunnel or MailHog container
-when no longer needed (`make mail-stop`).
+and regenerate the QR assets. Stop any optional tunnel when no longer needed.

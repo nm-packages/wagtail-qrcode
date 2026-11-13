@@ -79,7 +79,7 @@ customizations.
 
 No required changes were found to the package's existing publishing hooks or
 field panel APIs. A rendering test now covers the QR preview, usage count,
-document field and recipient field. The example site and MailHog configuration
+document field and recipient field. The example site and sandbox email configuration
 use Django 6.1's `MAILERS` setting on that release and retain `EMAIL_BACKEND` for
 Django 5.2 and 6.0. Host sites should follow
 [Django's email migration guidance](https://docs.djangoproject.com/en/6.1/topics/email/#migrating-email-to-mailers).

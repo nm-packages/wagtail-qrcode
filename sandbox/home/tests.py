@@ -191,7 +191,7 @@ class ResetTests(TestCase):
             (project / ".data" / "media" / "qr.eps").write_text("generated")
             (project / "settings").mkdir()
             local = project / "settings" / "local.py"
-            local.write_text("SANDBOX_MAIL = 'file'")
+            local.write_text("SANDBOX_BASE_URL = 'http://localhost:8000'")
             unrelated = root / "db.sqlite3"
             unrelated.write_text("unrelated")
             reset_data(project)

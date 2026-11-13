@@ -58,7 +58,7 @@ new state in `sandbox/.data/`; keep any old files until you no longer need them.
 
 ## Local email and attachments
 
-The default backend writes messages to `sandbox/.data/emails/*.log`, without
+The file backend writes messages to `sandbox/.data/emails/*.log`, without
 external delivery. Enter any valid recipient such as `reader@example.test`,
 subject and body in the QR Code tab, then **Save draft** or **Publish**.
 
@@ -72,16 +72,13 @@ its `%!PS-Adobe` header in a text editor. Compare it with the newly generated
 editor download, rather than an older published document. Raw `.log` files
 contain the full MIME message, including the attachment.
 
-For an optional browser mail viewer, see [MailHog](mailhog.md). Starting the
-container does not copy or overwrite either project's local settings.
-
 ## Configuration and another device
 
 No tunnel is required for localhost. To persist configuration, copy
 `sandbox/settings/local.py.example` to `sandbox/settings/local.py` and edit it.
-This file is ignored by Git and survives setup and reset. The supported options
-are `SANDBOX_BASE_URL` and `SANDBOX_MAIL`; values in `local.py` take precedence
-over environment variables of the same names.
+This file is ignored by Git and survives setup and reset. Set `SANDBOX_BASE_URL`
+to configure the origin; its value in `local.py` takes precedence over the
+environment variable of the same name.
 
 For a phone on the same LAN, replace this example address with your computer's
 LAN address, allow access to port 8000, and run both commands with the same origin:

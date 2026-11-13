@@ -4,7 +4,7 @@
 
 `wagtail_qrcode/` is the reusable Django/Wagtail package. QR generation lives in `cls.py`; page integration, admin forms, panels, hooks, and redirects live in the corresponding modules. Admin templates are under `wagtail_qrcode/templates/wagtail_qrcode/admin/`.
 
-`tests/` contains Django tests and project settings. `tests/testapp/` supplies example page models, migrations, templates, and static assets. `docs/` contains contributor instructions and MailHog setup. Packaging metadata lives in `pyproject.toml` and `MANIFEST.in`.
+`tests/` contains Django tests and project settings. `tests/testapp/` supplies example page models, migrations, templates, and static assets. `docs/` contains contributor instructions, sandbox setup, and smoke tests. Packaging metadata lives in `pyproject.toml` and `MANIFEST.in`.
 
 ## Build, Test, and Development Commands
 

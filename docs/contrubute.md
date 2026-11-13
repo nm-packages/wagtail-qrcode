@@ -115,8 +115,6 @@ testing so content and generated files persist separately from the test suite.
 - `make sandbox-email`: print the latest captured email and extract its EPS.
 - `make format`: apply Ruff fixes and format Python and Markdown code blocks.
 - `make lint`: check lint and formatting without changing files.
-- `make mail`: start optional [MailHog](mailhog.md), preserving local settings.
-- `make mail-stop`: stop and remove the MailHog container.
 
 When invoking the root test runner directly, use
 `uv run --locked python manage.py test tests` to keep discovery within the package

@@ -2,7 +2,9 @@
 
 ## Unreleased
 
-- Integrate the persistent local sandbox with QR example pages, repeatable setup, a sandbox-only reset, captured email and configurable device URLs. Use `make sandbox-setup` and `make sandbox-run`; follow the new sandbox and smoke-test guides. Optional `make mail` now only starts MailHog and preserves local configuration.
+- Integrate the persistent local sandbox with QR example pages, repeatable setup, a sandbox-only reset, captured email and configurable device URLs. Use `make sandbox-setup` and `make sandbox-run`; follow the new sandbox and smoke-test guides.
+
+- Remove optional MailHog tooling and the `make mail` / `make mail-stop` commands. Inspect sandbox email and EPS attachments with `make sandbox-email`; file capture needs no external service. The `SANDBOX_MAIL` setting is no longer used.
 
 - Scope package test discovery to `tests/` so the standalone sandbox's tests do not run with the package test settings. Run sandbox tests separately with `uv run --locked python sandbox/manage.py test home`.
 
@@ -17,7 +19,7 @@
 - Ensure tox selects the requested database backend and forwards its connection settings; use PostgreSQL 16 and MySQL 8.4 in CI for the expanded platform matrix.
 - Reduce CI to seven jobs and align plain `tox` with its 34 test environments: keep the full SQLite matrix and test three representative Django/Wagtail pairs on Python 3.14 for each of PostgreSQL and MySQL. Use explicit `tox -e` selections for all 84 supported combinations when needed.
 - Fix database test compatibility by enabling Django's PostgreSQL application for that backend and checking generated documents without assuming primary keys restart at one.
-- Use Django 6.1's `MAILERS` configuration in the example site and MailHog setup while preserving email settings for older Django versions.
+- Use Django 6.1's `MAILERS` configuration in the example site and sandbox while preserving email settings for older Django versions.
 - Add repository skills for development, code review, Wagtail integration, and Python, Django, Wagtail, and combined platform upgrades.
 - Standardize contribution and release preparation on `main`; retire `release` from active development.
 - Add a PR template and contributor guidance for keeping descriptions and validation results current and recording notable changes in the changelog.
