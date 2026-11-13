@@ -194,7 +194,6 @@ Set the configuration (optional, these are the defaults)
 
 ```python
 WAGTAIL_QR_CODE = {
-    "collection_name": "QR Codes",
     "scale": 3,
     "quiet_zone": 6,
     "svg_has_xml_declaration": False,
@@ -202,7 +201,10 @@ WAGTAIL_QR_CODE = {
 }
 ```
 
-- collection_name: is automatically created and used as the collection for all generated QR codes
+Generated EPS documents are stored in the **QR Codes** collection, which is
+created automatically. The collection name is currently fixed; setting
+`collection_name` does not change it.
+
 - scale: the size of the dots in the QR code
 - quiet_zone: the plain border around the QR code
 - svg_has_xml_declaration: does the QR code SVG have an XML declaration
