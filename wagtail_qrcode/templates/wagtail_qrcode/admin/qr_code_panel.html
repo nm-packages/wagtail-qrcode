@@ -1,0 +1,11 @@
+{% load i18n %}
+{% if preview_url %}
+    <p><img src="{{ preview_url }}" alt="{% trans 'QR code preview' %}"></p>
+    <p>
+        <a class="button button-secondary" href="{{ svg_url }}">{% trans "Download SVG" %}</a>
+        <a class="button button-secondary" href="{{ eps_url }}">{% trans "Download EPS" %}</a>
+    </p>
+    <p>{% blocktrans count counter=usage_count %}{{ counter }} scan{% plural %}{{ counter }} scans{% endblocktrans %}</p>
+{% else %}
+    <p>{% trans "Save the page to preview and download its QR code." %}</p>
+{% endif %}

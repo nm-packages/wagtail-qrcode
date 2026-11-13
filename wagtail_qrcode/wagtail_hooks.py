@@ -1,119 +1,73 @@
 from django.conf import settings
 from django.core.mail import EmailMessage
 from django.db import transaction
+from django.urls import include, path
 from wagtail import hooks
-from wagtail.documents import get_document_model
 
 from wagtail_qrcode.admin_forms import QrCodeEmailFieldsForm, QrCodeEmailForm
-from wagtail_qrcode.cls import WagtailQrCode, create_collection
+from wagtail_qrcode.cls import WagtailQrCode
 from wagtail_qrcode.models import QRCodeMixin
+from wagtail_qrcode.views import qr_code_download, qr_code_preview
+
+
+@hooks.register("register_admin_urls")
+def register_admin_urls():
+    return [
+        path(
+            "qr-codes/",
+            include(
+                (
+                    [
+                        path("<int:page_id>/preview/", qr_code_preview, name="preview"),
+                        path(
+                            "<int:page_id>/download/<str:file_format>/",
+                            qr_code_download,
+                            name="download",
+                        ),
+                    ],
+                    "wagtail_qrcode_admin",
+                )
+            ),
+        )
+    ]
 
 
 @hooks.register("after_create_page")
 @hooks.register("after_edit_page")
-@transaction.atomic
-def generate_qr_code(request, page):
-    """Add QR assets to the saved revision without changing its publication state."""
-
-    # Wagtail uses the JSON save flow for autosave, including page creation.
-    if not is_qrcode_instance(page) or not request.accepts("text/html"):
-        return
-
-    revision = page.get_latest_revision()
-    collection = create_collection("QR Codes")
-    svg, document = WagtailQrCode(revision.as_object(), collection).build()
-    page.qr_code_svg = svg
-    page.qr_code_eps = document
-
-    # Wagtail has already saved (and possibly published or scheduled) this revision.
-    # Enrich it rather than saving another revision or publishing draft content.
-    revision.content.update(qr_code_svg=svg, qr_code_eps=document.pk)
-    revision.save(update_fields=["content"])
-
-    # Workflow approval may publish through a different page instance. Refresh
-    # only publication state so draft field values on this instance are preserved.
-    page.refresh_from_db(fields=["live", "live_revision"])
-
-    # Live rows must retain their published QR assets when editing a draft.
-    if not page.live or page.live_revision_id == revision.pk:
-        type(page).objects.filter(pk=page.pk).update(
-            qr_code_svg=svg, qr_code_eps=document
-        )
-        if page.live:
-            update_alias_qr_codes(page)
-
-    if request.method == "POST" and issubclass(
-        page.get_edit_handler().get_form_class(), QrCodeEmailForm
+def email_qr_code(request, page):
+    """Handle explicit editor email requests without changing saved content."""
+    if (
+        request.method != "POST"
+        or not request.accepts("text/html")
+        or not isinstance(page, QRCodeMixin)
+        or not issubclass(page.get_edit_handler().get_form_class(), QrCodeEmailForm)
     ):
-        email_form = QrCodeEmailFieldsForm(request.POST)
-        if email_form.is_valid() and email_form.cleaned_data["email_address"]:
-            send_qr_code_email(
-                page,
-                email=email_form.cleaned_data["email_address"],
-                subject=email_form.cleaned_data["email_subject"],
-                body=email_form.cleaned_data["email_body"],
-            )
-
-
-def update_alias_qr_codes(page):
-    """Sync QR assets after Wagtail has published the source and its aliases."""
-    parent_ids = [page.pk]
-    updated_ids = {page.pk}
-    while parent_ids:
-        aliases = (
-            type(page)
-            .objects.filter(alias_of_id__in=parent_ids)
-            .exclude(pk__in=updated_ids)
+        return
+    email_form = QrCodeEmailFieldsForm(request.POST)
+    if email_form.is_valid() and email_form.cleaned_data["email_address"]:
+        send_qr_code_email(
+            page,
+            email=email_form.cleaned_data["email_address"],
+            subject=email_form.cleaned_data["email_subject"],
+            body=email_form.cleaned_data["email_body"],
         )
-        parent_ids = list(aliases.values_list("pk", flat=True))
-        if parent_ids:
-            # Only the QR fields changed after publication. Do not publish again
-            # or copy other content, which would repeat publication side effects.
-            type(page).objects.filter(pk__in=parent_ids).update(
-                qr_code_svg=page.qr_code_svg, qr_code_eps=page.qr_code_eps
-            )
-            updated_ids.update(parent_ids)
 
 
 def send_qr_code_email(page, email=None, subject=None, body=None):
-    """Send the QR code to the email address."""
-    doc = page.qr_code_eps
-    if doc is None or email is None:
+    """Render an EPS attachment in memory and send it after commit."""
+    if email is None:
         return
-
-    if subject is None:
-        subject = f"QR Code for {page.title}"
-    if body is None:
-        body = f"QR Code for {page.title}"
-
-    with doc.file.open("rb") as eps:
-        attachment = eps.read()
-
-    email = EmailMessage(
-        subject=subject,
-        body=body,
+    message = EmailMessage(
+        subject=subject if subject is not None else f"QR Code for {page.title}",
+        body=body if body is not None else f"QR Code for {page.title}",
         from_email=settings.DEFAULT_FROM_EMAIL,
         to=[email],
-        attachments=[("qr-code-{}.eps".format(page.id), attachment, "image/eps")],
+        attachments=[
+            (
+                f"qr-code-{page.pk}.eps",
+                WagtailQrCode(page).render("eps"),
+                "application/postscript",
+            )
+        ],
     )
-
-    def send():
-        try:
-            email.send()
-        except Exception as e:
-            print(e)
-
-    transaction.on_commit(send)
-
-
-@hooks.register("after_delete_page")
-def delete_document(request, page):
-    if is_qrcode_instance(page) and page.qr_code_eps:
-        doc = get_document_model().objects.filter(id=page.qr_code_eps.id)
-        if doc:
-            doc.delete()
-
-
-def is_qrcode_instance(page):
-    """Check if the page is a QR code page and inherits from the QRCodeMixin"""
-    return isinstance(page, QRCodeMixin)
+    transaction.on_commit(message.send, robust=True)

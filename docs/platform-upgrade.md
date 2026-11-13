@@ -77,9 +77,10 @@ in-place migration of an existing site. Host sites must also follow each
 intermediate framework release's upgrade notes for their models, content and
 customizations.
 
-No required changes were found to the package's existing publishing hooks or
-field panel APIs. A rendering test now covers the QR preview, usage count,
-document field and recipient field. The example site and MailHog configuration
+At the time of the platform upgrade, no required changes were found to the
+package's publishing hooks or field panel APIs. The subsequent QR ownership
+redesign replaces document fields with a read-only preview and SVG/EPS downloads;
+rendering tests cover those controls, the usage count and recipient field. The example site and MailHog configuration
 use Django 6.1's `MAILERS` setting on that release and retain `EMAIL_BACKEND` for
 Django 5.2 and 6.0. Host sites should follow
 [Django's email migration guidance](https://docs.djangoproject.com/en/6.1/topics/email/#migrating-email-to-mailers).
@@ -119,9 +120,9 @@ settings. Coverage files are isolated per environment. Start database services
 before invoking the PostgreSQL or MySQL environments.
 
 The test site enables `django.contrib.postgres` when PostgreSQL is selected,
-so Django can validate Wagtail's PostgreSQL search fields and indexes. Hook
-tests check the generated document's identity and deletion without assuming
-that database sequences reset between tests.
+so Django can validate Wagtail's PostgreSQL search fields and indexes. QR tests
+verify in-memory exports and page-owned counter deletion without assuming that
+database sequences reset between tests.
 
 ```bash
 uv run --locked tox list
