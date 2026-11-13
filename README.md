@@ -151,10 +151,14 @@ Include the wagtail-qrcode urls in your site urls before `wagtail_urls`.
 
 The url provides the redirect endpoint when the qr-code is scanned and viewed in a browser.
 
+The generator encodes `BASE_URL/qr-code?id=PAGE_ID`. Register the endpoint
+without a trailing slash so scans resolve directly, without relying on Django's
+automatic slash redirect.
+
 ```python
 urlpatterns = [
     # ...
-    path("qr-code/", include("wagtail_qrcode.urls")),
+    path("qr-code", include("wagtail_qrcode.urls")),
     # ...
 ]
 ```
@@ -166,7 +170,7 @@ from wagtail_qrcode.views import qr_code_page_view
 
 urlpatterns = [
     # ...
-    path("qr-code/", qr_code_page_view, name="qr-code-view"),
+    path("qr-code", qr_code_page_view, name="qr_code_page_view"),
     # ...
 ]
 ```
