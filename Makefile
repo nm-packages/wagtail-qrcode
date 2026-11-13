@@ -1,4 +1,4 @@
-.PHONY: list sync migrate admin run test mail mail-stop format lint
+.PHONY: list sync migrate admin run test format lint
 list:
 	@LC_ALL=C $(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null | awk -v RS= -F: '/(^|\n)# Files(\n|$$)/,/(^|\n)# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' | sort | egrep -v -e '^[^[:alnum:]]' -e '^$@$$'
 
@@ -14,19 +14,8 @@ run:
 
 test:
 	@echo "Running tests..."
-	@uv run --locked coverage run manage.py test --deprecation all
+	@uv run --locked coverage run manage.py test tests --deprecation all
 	@uv run --locked coverage report -m
-
-mail:
-	@echo "Starting mail server"
-	@cp tests/local.py.example tests/local.py
-	@docker run -d -p 8025:8025 -p 1025:1025 --name mailhog mailhog/mailhog
-	@make run
-
-mail-stop:
-	@echo "Stopping mail server"
-	@docker stop mailhog
-	@docker rm mailhog
 
 format:
 	@uv run --locked ruff check --fix .
@@ -38,3 +27,21 @@ lint:
 
 sync:
 	@uv sync --locked
+
+.PHONY: sandbox-setup sandbox-run sandbox-test sandbox-reset sandbox-email
+sandbox-setup:
+	@uv run --locked python sandbox/manage.py setup_sandbox
+
+sandbox-run:
+	@uv run --locked python sandbox/manage.py runserver 0.0.0.0:8000
+
+sandbox-test:
+	@uv run --locked python sandbox/manage.py test home
+
+# Explicitly destructive: stop the sandbox server before invoking this target.
+sandbox-reset:
+	@uv run --locked python sandbox/reset.py --yes
+	@$(MAKE) sandbox-setup
+
+sandbox-email:
+	@uv run --locked python sandbox/read_email.py

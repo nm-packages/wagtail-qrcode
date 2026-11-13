@@ -159,3 +159,6 @@ cython_debug/
 # local
 local.py
 test-media
+
+# Persistent manual sandbox state
+/sandbox/.data/
