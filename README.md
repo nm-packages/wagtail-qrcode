@@ -191,6 +191,14 @@ WAGTAIL_QR_CODE = {
 - svg_has_xml_declaration: does the QR code SVG have an XML declaration
 - svg_has_doc_type_declaration: does the QR code SVG have an HTML doc-type
 
+## Local demonstration
+
+Run `uv sync --locked`, `make sandbox-setup` and `make sandbox-run` to explore
+this checkout at <http://localhost:8000/> (local admin login: `admin` / `admin`).
+See the [sandbox setup guide](docs/sandbox.md) and
+[developer smoke tests](docs/smoke-tests.md) for downloads, email, draft saves,
+autosave, persistence and optional device testing.
+
 ## Contributing
 
 If you would like to suggest an improvement to the package [contributions](docs/contrubute.md) are welcome

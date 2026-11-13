@@ -17,11 +17,9 @@ test:
 	@uv run --locked coverage run manage.py test tests --deprecation all
 	@uv run --locked coverage report -m
 
+# Optional local mail capture; never overwrite local settings.
 mail:
-	@echo "Starting mail server"
-	@cp tests/local.py.example tests/local.py
-	@docker run -d -p 8025:8025 -p 1025:1025 --name mailhog mailhog/mailhog
-	@make run
+	@docker run -d -p 127.0.0.1:8025:8025 -p 127.0.0.1:1025:1025 --name mailhog mailhog/mailhog
 
 mail-stop:
 	@echo "Stopping mail server"
@@ -38,3 +36,21 @@ lint:
 
 sync:
 	@uv sync --locked
+
+.PHONY: sandbox-setup sandbox-run sandbox-test sandbox-reset sandbox-email
+sandbox-setup:
+	@uv run --locked python sandbox/manage.py setup_sandbox
+
+sandbox-run:
+	@uv run --locked python sandbox/manage.py runserver 0.0.0.0:8000
+
+sandbox-test:
+	@uv run --locked python sandbox/manage.py test home
+
+# Explicitly destructive: stop the sandbox server before invoking this target.
+sandbox-reset:
+	@uv run --locked python sandbox/reset.py --yes
+	@$(MAKE) sandbox-setup
+
+sandbox-email:
+	@uv run --locked python sandbox/read_email.py

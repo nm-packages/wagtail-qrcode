@@ -31,6 +31,8 @@ jobs:
         run: uv sync --locked
       - name: Check lint and formatting
         run: make lint
+      - name: Test contributor sandbox
+        run: make sandbox-test
 
   test-sqlite:
     runs-on: ubuntu-24.04

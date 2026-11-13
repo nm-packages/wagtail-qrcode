@@ -1,43 +1,210 @@
-from home.models import HomePage
+"""Integration checks for the contributor sandbox, under its own settings."""
+
+import tempfile
+from io import StringIO
+from pathlib import Path
+
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.core import mail
+from django.core.management import call_command
+from django.test import TestCase
+from django.urls import reverse
+from home.management.commands.setup_sandbox import Command
+from home.models import HomePage, QRCodePage
+from reset import reset_data
+from wagtail.documents import get_document_model
 from wagtail.models import Page, Site
-from wagtail.test.utils import WagtailPageTestCase
+
+from wagtail_qrcode.cls import WagtailQrCode
 
 
-class HomeSetUpTests(WagtailPageTestCase):
-    """
-    Tests for basic page structure setup and HomePage creation.
-    """
-
-    def test_root_create(self):
-        root_page = Page.objects.get(pk=1)
-        self.assertIsNotNone(root_page)
-
-    def test_homepage_create(self):
-        root_page = Page.objects.get(pk=1)
-        homepage = HomePage(title="Home")
-        root_page.add_child(instance=homepage)
-        self.assertTrue(HomePage.objects.filter(title="Home").exists())
-
-
-class HomeTests(WagtailPageTestCase):
-    """
-    Tests for homepage functionality and rendering.
-    """
-
+class SandboxTests(TestCase):
     def setUp(self):
-        """
-        Create a homepage instance for testing.
-        """
-        root_page = Page.get_first_root_node()
-        Site.objects.create(
-            hostname="testsite", root_page=root_page, is_default_site=True
+        # Migrations are tested by the runner; seed inside this transaction.
+        Command().seed()
+        self.page = QRCodePage.objects.get(sandbox_example="published")
+        self.draft = QRCodePage.objects.get(sandbox_example="draft")
+        self.user = get_user_model().objects.get(username="admin")
+
+    def test_setup_preserves_edited_examples_and_passwords(self):
+        self.page.title = "Contributor title"
+        self.page.slug = "contributor-slug"
+        self.page.save_revision().publish()
+        self.draft.title = "Unfinished draft"
+        self.draft.save_revision()
+        self.user.set_password("changed-password")
+        self.user.save()
+        before = (
+            Page.objects.count(),
+            Site.objects.count(),
+            get_document_model().objects.count(),
         )
-        self.homepage = HomePage(title="Home")
-        root_page.add_child(instance=self.homepage)
+        # Exercise the complete command, including its migrate invocation.
+        call_command("setup_sandbox", stdout=StringIO(), verbosity=0)
+        self.page.refresh_from_db()
+        self.assertEqual(self.page.title, "Contributor title")
+        self.assertEqual(self.page.slug, "contributor-slug")
+        self.assertEqual(
+            self.draft.get_latest_revision_as_object().title, "Unfinished draft"
+        )
+        self.assertEqual(
+            before,
+            (
+                Page.objects.count(),
+                Site.objects.count(),
+                get_document_model().objects.count(),
+            ),
+        )
+        self.assertEqual(get_user_model().objects.filter(username="admin").count(), 1)
+        self.assertTrue(
+            get_user_model()
+            .objects.get(pk=self.user.pk)
+            .check_password("changed-password")
+        )
 
-    def test_homepage_is_renderable(self):
-        self.assertPageIsRenderable(self.homepage)
+    def test_copy_does_not_duplicate_setup_identity(self):
+        copy = self.page.copy(
+            update_attrs={"title": "Copied example", "slug": "copied-example"},
+            keep_live=False,
+        )
+        self.assertIsNone(copy.sandbox_example)
+        Command().seed()
+        self.assertEqual(QRCodePage.objects.count(), 3)
 
-    def test_homepage_template_used(self):
-        response = self.client.get(self.homepage.url)
-        self.assertTemplateUsed(response, "home/home_page.html")
+    def test_missing_example_does_not_overwrite_an_occupied_slug(self):
+        self.draft.delete()
+        home = HomePage.objects.first()
+        manual = home.add_child(
+            instance=QRCodePage(
+                title="Manual page", slug="draft-qr-example", live=False
+            )
+        )
+        Command().seed()
+        self.assertEqual(QRCodePage.objects.get(pk=manual.pk).title, "Manual page")
+        recreated = QRCodePage.objects.get(sandbox_example="draft")
+        self.assertNotEqual(recreated.slug, manual.slug)
+        self.assertFalse(recreated.live)
+
+    def test_setup_updates_site_origin_without_replacing_content(self):
+        site_id = Site.objects.get(root_page=HomePage.objects.first()).pk
+        with self.settings(SANDBOX_HOST="192.168.1.10", SANDBOX_PORT=8000):
+            Command().seed()
+        site = Site.objects.get(pk=site_id)
+        self.assertEqual((site.hostname, site.port), ("192.168.1.10", 8000))
+        self.assertEqual(QRCodePage.objects.count(), 2)
+
+    def test_examples_render_and_draft_stays_unpublished(self):
+        self.assertTrue(self.page.live)
+        self.assertFalse(self.draft.live)
+        home = self.client.get("/")
+        self.assertContains(home, self.page.title)
+        self.assertNotContains(home, self.draft.title)
+        response = self.client.get(self.page.url)
+        self.assertContains(response, self.page.title)
+        self.assertContains(response, "<svg")
+        self.assertContains(response, self.page.qr_code_eps.url)
+        self.assertEqual(self.client.get(self.draft.url).status_code, 404)
+        download = self.client.get(self.page.qr_code_eps.url)
+        self.assertEqual(download.status_code, 200)
+        try:
+            self.assertTrue(
+                b"".join(download.streaming_content).startswith(b"%!PS-Adobe")
+            )
+        finally:
+            download.close()
+
+    def test_encoded_url_survives_slug_change_and_counts_usage(self):
+        generator = WagtailQrCode(self.page)
+        expected_code = generator.make_qr_code(
+            f"{settings.WAGTAIL_QR_CODE_BASE_URL}/qr-code?id={self.page.pk}"
+        )
+        self.assertEqual(self.page.qr_code_svg, generator.make_svg(expected_code))
+        self.page.slug = "new-slug"
+        self.page.save_revision().publish()
+        response = self.client.get(reverse("qr_code_page_view"), {"id": self.page.pk})
+        self.page.refresh_from_db()
+        self.assertRedirects(response, self.page.url)
+        self.assertEqual(self.page.qr_code_usage, 1)
+
+    def form_data(self, title):
+        revision = self.page.get_latest_revision()
+        return {
+            "title": title,
+            "slug": self.page.slug,
+            "qr_code_usage": self.page.qr_code_usage,
+            "qr_code_svg": self.page.qr_code_svg,
+            "qr_code_eps": self.page.qr_code_eps_id,
+            "loaded_revision_id": revision.pk,
+            "loaded_revision_created_at": revision.created_at.isoformat(),
+            "email_address": "reader@example.test",
+            "email_subject": "Sandbox EPS",
+            "email_body": "Newly generated QR code",
+        }
+
+    def test_editor_autosave_and_explicit_draft_email(self):
+        self.client.force_login(self.user)
+        url = reverse("wagtailadmin_pages:edit", args=[self.page.pk])
+        editor = self.client.get(url)
+        self.assertContains(editor, "QR Code")
+        self.assertContains(editor, "email_address")
+        live_title, live_document = self.page.title, self.page.qr_code_eps_id
+        count = get_document_model().objects.count()
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self.client.post(
+                url,
+                self.form_data("Autosaved title"),
+                headers={"Accept": "application/json"},
+            )
+        self.assertTrue(response.json()["success"])
+        self.assertEqual(get_document_model().objects.count(), count)
+        self.assertEqual(len(mail.outbox), 0)
+        data = self.form_data("Draft title")
+        data["action-save-draft"] = "Save draft"
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self.client.post(url, data)
+        self.assertEqual(response.status_code, 302)
+        self.page.refresh_from_db()
+        self.assertEqual(
+            (self.page.title, self.page.qr_code_eps_id), (live_title, live_document)
+        )
+        draft = self.page.get_latest_revision_as_object()
+        self.assertEqual(draft.title, "Draft title")
+        self.assertNotEqual(draft.qr_code_eps_id, live_document)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, ["reader@example.test"])
+        with draft.qr_code_eps.file.open("rb") as eps:
+            self.assertEqual(mail.outbox[0].attachments[0][1], eps.read())
+
+    def test_test_media_is_separate_from_manual_sandbox_media(self):
+        self.assertNotEqual(
+            Path(settings.MEDIA_ROOT), settings.SANDBOX_DATA_DIR / "media"
+        )
+
+
+class ResetTests(TestCase):
+    def test_reset_is_limited_to_sandbox_data_and_preserves_local_settings(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            project = root / "sandbox"
+            (project / ".data" / "media").mkdir(parents=True)
+            (project / ".data" / "media" / "qr.eps").write_text("generated")
+            (project / "settings").mkdir()
+            local = project / "settings" / "local.py"
+            local.write_text("SANDBOX_MAIL = 'file'")
+            unrelated = root / "db.sqlite3"
+            unrelated.write_text("unrelated")
+            reset_data(project)
+            reset_data(project)
+            self.assertFalse((project / ".data").exists())
+            self.assertTrue(local.exists())
+            self.assertEqual(unrelated.read_text(), "unrelated")
+
+    def test_reset_refuses_a_symlink(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            project = root / "sandbox"
+            project.mkdir()
+            (project / ".data").symlink_to(root, target_is_directory=True)
+            with self.assertRaisesMessage(ValueError, "symlinked"):
+                reset_data(project)

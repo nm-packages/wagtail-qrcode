@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Integrate the persistent local sandbox with QR example pages, repeatable setup, a sandbox-only reset, captured email and configurable device URLs. Use `make sandbox-setup` and `make sandbox-run`; follow the new sandbox and smoke-test guides. Optional `make mail` now only starts MailHog and preserves local configuration.
+
 - Scope package test discovery to `tests/` so the standalone sandbox's tests do not run with the package test settings. Run sandbox tests separately with `uv run --locked python sandbox/manage.py test home`.
 
 - Adopt uv and a committed lockfile for contributor dependencies. Replace the development/testing extras with a `dev` dependency group; use `uv sync --locked` and `uv run --locked`. Make targets and CI use the locked tools, and tox uses uv while retaining its independent framework compatibility matrix.

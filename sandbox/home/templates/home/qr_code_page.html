@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<main>
+    <p><a href="/">Sandbox home</a> · <a href="{% url 'wagtailadmin_pages:edit' page.pk %}">Edit page</a></p>
+    <h1>{{ page.title }}</h1>
+    {% if page.qr_code_svg %}<div aria-label="QR code">{{ page.qr_code_svg|safe }}</div>{% endif %}
+    {% if page.qr_code_eps %}<p><a href="{{ page.qr_code_eps.url }}">Download EPS</a></p>{% endif %}
+    <p><a href="{% url 'qr_code_page_view' %}?id={{ page.pk }}">Follow encoded redirect</a></p>
+    <p>Usage count: {{ page.qr_code_usage }}</p>
+</main>
+{% endblock %}

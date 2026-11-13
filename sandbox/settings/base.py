@@ -11,10 +11,21 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 """
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
+import os
+from importlib.util import find_spec
 from pathlib import Path
+from urllib.parse import urlsplit
+
+from django import VERSION as DJANGO_VERSION
 
 PROJECT_DIR = Path(__file__).resolve().parent.parent
 BASE_DIR = PROJECT_DIR.parent
+SANDBOX_DATA_DIR = PROJECT_DIR / ".data"
+SANDBOX_DATA_DIR.mkdir(exist_ok=True)
+SANDBOX_BASE_URL = os.environ.get("SANDBOX_BASE_URL", "http://localhost:8000").rstrip(
+    "/"
+)
+SANDBOX_MAIL = os.environ.get("SANDBOX_MAIL", "file")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -23,13 +34,7 @@ DEBUG = True
 SECRET_KEY = "django-insecure-swx69r7+kdw60)m8n3*uaff0kgbkaw+4^ou2a_y0km)pgev01#"
 
 # SECURITY WARNING: define the correct hosts in production!
-ALLOWED_HOSTS = ["*"]
-
-MAILERS = {
-    "default": {
-        "BACKEND": "django.core.mail.backends.console.EmailBackend",
-    },
-}
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "[::1]"]
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
@@ -39,6 +44,7 @@ MAILERS = {
 
 INSTALLED_APPS = [
     "home",
+    "wagtail_qrcode",
     # "search", # intentionally disabled, it's not needed for the QRcode app.
     "wagtail.contrib.forms",
     "wagtail.contrib.redirects",
@@ -102,7 +108,7 @@ WSGI_APPLICATION = "wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "NAME": SANDBOX_DATA_DIR / "db.sqlite3",
     }
 }
 
@@ -150,10 +156,10 @@ STATICFILES_DIRS = [
     PROJECT_DIR / "static",
 ]
 
-STATIC_ROOT = BASE_DIR / "static"
+STATIC_ROOT = SANDBOX_DATA_DIR / "static"
 STATIC_URL = "/static/"
 
-MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_ROOT = SANDBOX_DATA_DIR / "media"
 MEDIA_URL = "/media/"
 
 # Default storage settings
@@ -184,10 +190,6 @@ WAGTAILSEARCH_BACKENDS = {
     }
 }
 
-# Base URL to use when referring to full URLs within the Wagtail admin backend -
-# e.g. in notification emails. Don't include '/admin' or a trailing slash
-WAGTAILADMIN_BASE_URL = "http://example.com"
-
 # Allowed file extensions for documents in the document library.
 # This can be omitted to allow all files, but note that this may present a security risk
 # if untrusted users are allowed to upload files -
@@ -207,3 +209,47 @@ WAGTAILDOCS_EXTENSIONS = [
 
 # Maximum upload size for documents in bytes.
 WAGTAILDOCS_MAX_UPLOAD_SIZE = 10 * 1024 * 1024  # 10MB
+
+# Optional private overrides; errors inside local.py must remain visible.
+if find_spec("settings.local") is not None:
+    from .local import *  # noqa: F403,F401
+
+SANDBOX_BASE_URL = SANDBOX_BASE_URL.rstrip("/")
+base_url = urlsplit(SANDBOX_BASE_URL)
+if (
+    base_url.scheme not in {"http", "https"}
+    or not base_url.hostname
+    or base_url.path not in {"", "/"}
+    or base_url.query
+    or base_url.fragment
+    or base_url.username
+):
+    raise ValueError("SANDBOX_BASE_URL must be an http(s) origin without a path")
+SANDBOX_HOST = base_url.hostname
+SANDBOX_PORT = base_url.port or (443 if base_url.scheme == "https" else 80)
+allowed_host = SANDBOX_HOST if ":" not in SANDBOX_HOST else f"[{SANDBOX_HOST}]"
+ALLOWED_HOSTS = list(dict.fromkeys([*ALLOWED_HOSTS, allowed_host]))
+CSRF_TRUSTED_ORIGINS = [SANDBOX_BASE_URL]
+WAGTAILADMIN_BASE_URL = SANDBOX_BASE_URL
+WAGTAIL_QR_CODE_BASE_URL = SANDBOX_BASE_URL
+DEFAULT_FROM_EMAIL = "sandbox@example.test"
+WAGTAILDOCS_EXTENSIONS += ["eps"]
+
+# Local capture only. Both paths preserve MIME attachments.
+if SANDBOX_MAIL == "file":
+    backend = "django.core.mail.backends.filebased.EmailBackend"
+    options = {"file_path": SANDBOX_DATA_DIR / "emails"}
+elif SANDBOX_MAIL == "smtp":
+    backend = "django.core.mail.backends.smtp.EmailBackend"
+    options = {"host": "127.0.0.1", "port": 1025}
+else:
+    raise ValueError("SANDBOX_MAIL must be 'file' or 'smtp'")
+if DJANGO_VERSION >= (6, 1):
+    MAILERS = {"default": {"BACKEND": backend, "OPTIONS": options}}
+else:
+    EMAIL_BACKEND = backend
+    EMAIL_FILE_PATH = SANDBOX_DATA_DIR / "emails"
+    EMAIL_HOST = "127.0.0.1"
+    EMAIL_PORT = 1025
+
+TEST_RUNNER = "home.runner.SandboxTestRunner"
