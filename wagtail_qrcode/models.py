@@ -1,48 +1,34 @@
-from django import forms
 from django.db import models
-from wagtail.admin.panels import FieldPanel
-from wagtail.documents import get_document_model
-from wagtail.images import get_image_model
 
-from wagtail_qrcode.field_panels import QrCodeFieldPanel, QrCodeUsageFieldPanel
+from wagtail_qrcode.field_panels import QrCodePanel
 
-ImageModel = get_image_model()
-DocumentModel = get_document_model()
+
+class QRCode(models.Model):
+    """Page-owned scan statistics, independent of page revisions and QR output."""
+
+    page = models.OneToOneField(
+        "wagtailcore.Page",
+        on_delete=models.CASCADE,
+        related_name="qr_code_record",
+    )
+    usage_count = models.PositiveBigIntegerField(default=0, editable=False)
 
 
 class QRCodeMixin(models.Model):
     GENERATE_QR_CODE = True
 
-    qr_code_svg = models.TextField(
-        verbose_name="QR Code SVG",
-        blank=True,
-        null=True,
-    )
-
-    qr_code_eps = models.ForeignKey(
-        get_document_model(),
-        verbose_name="QR Code EPS",
-        blank=True,
-        null=True,
-        on_delete=models.SET_NULL,
-    )
-
-    qr_code_usage = models.IntegerField(
-        verbose_name="QR Code Usage Count",
-        default=0,
-    )
-
     class Meta:
         abstract = True
 
-    panels = [
-        QrCodeFieldPanel(
-            "qr_code_svg",
-            widget=forms.HiddenInput(),
-        ),
-        QrCodeUsageFieldPanel(
-            "qr_code_usage",
-            widget=forms.HiddenInput(),
-        ),
-        FieldPanel("qr_code_eps"),
-    ]
+    panels = [QrCodePanel(heading="QR code")]
+
+    @property
+    def qr_code_usage(self):
+        if not self.pk:
+            return 0
+        return (
+            QRCode.objects.filter(page_id=self.pk)
+            .values_list("usage_count", flat=True)
+            .first()
+            or 0
+        )

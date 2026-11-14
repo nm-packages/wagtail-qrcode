@@ -1,26 +1,10 @@
 {% extends "base.html" %}
-{% load static %}
+{% load wagtail_qrcode_tags %}
 
 {% block body_class %}template-qrcodepage{% endblock %}
 
-{% block extra_css %}
-{% comment %}
-This block is here to add some basic CSS for the page and isn't required for the QR code package.
-{% endcomment %}
-<link rel="stylesheet" href="{% static 'css/welcome_page.css' %}">
-{% endblock extra_css %}
-
 {% block content %}
-    <div style="padding-top:2em">
-        <h1>{{ page.title }}</h1>
-        <p>This is a page with a QR Code</p><br />
-        <p>The page as an id of {{ page.id }}</p><br />
-        <p>The generated QR Code</p><br />
-        <p>{{ page.qr_code_svg|safe }}<br />
-        <a href="/admin/documents/edit/{{ page.qr_code_eps.id }}">Download {{ page.qr_code_eps }}</a></p>
-        
-    </div>
-    <div style="padding-top:2em">
-        <p>This is only an page to demostrate the QR Code package.</p><br />
-        <p><b>It's not intened that the QR Code is displayed on the site, but hey why not!</b></p>
+    <h1>{{ page.title }}</h1>
+    <p>This example page has ID {{ page.id }}.</p>
+    {% qr_code_svg page %}
 {% endblock %}

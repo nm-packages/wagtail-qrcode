@@ -1,33 +1,37 @@
-from django import forms
 from django.test import TestCase
+from django.urls import reverse
 from wagtail.admin.panels import ObjectList
+from wagtail.models import Page
 
 from tests.testapp.models import QRCodePage
-from wagtail_qrcode.field_panels import QrCodeFieldPanel, QrCodeUsageFieldPanel
+from wagtail_qrcode.models import QRCode
 
 
 class TestFieldPanels(TestCase):
-    def test_qr_code_svg_field_panel(self):
-        fp = QrCodeFieldPanel("foo", widget=forms.TextInput, classname="full")
-        fp.field_name = "foo"
+    def render_panel(self, page):
+        handler = ObjectList(page.qrcode_panels).bind_to_model(QRCodePage)
+        form = handler.get_form_class()(instance=page)
+        panel = handler.get_bound_panel(instance=page, form=form)
+        return panel.render_html(), form
 
-    def test_qr_code_svg_usage_field_panel(self):
-        fp = QrCodeUsageFieldPanel("bar", widget=forms.TextInput, classname="full")
-        fp.field_name = "bar"
+    def test_unsaved_page(self):
+        html, _ = self.render_panel(QRCodePage())
+        self.assertIn("Save the page", html)
+        self.assertNotIn("<img", html)
+        self.assertFalse(QRCode.objects.exists())
 
-    def test_qr_code_panels_render_in_page_editor(self):
-        page = QRCodePage(
-            title="QR code preview",
-            qr_code_svg='<svg xmlns="http://www.w3.org/2000/svg"><title>QR preview</title></svg>',
-            qr_code_usage=42,
-        )
-        edit_handler = ObjectList(page.qrcode_panels).bind_to_model(QRCodePage)
-        form = edit_handler.get_form_class()(instance=page)
-        panel = edit_handler.get_bound_panel(instance=page, form=form)
-
-        html = panel.render_html()
-
-        self.assertIn(page.qr_code_svg, html)
-        self.assertIn('<h3 style="font-size:300%">42</h3>', html)
-        for field in ("qr_code_svg", "qr_code_usage", "qr_code_eps", "email_address"):
-            self.assertIn('name="{}"'.format(field), html)
+    def test_panel_is_read_only_with_preview_downloads_and_count(self):
+        page = Page.objects.get(pk=2).add_child(instance=QRCodePage(title="QR page"))
+        QRCode.objects.create(page=page, usage_count=42)
+        html, form = self.render_panel(page)
+        self.assertIn(reverse("wagtail_qrcode_admin:preview", args=[page.pk]), html)
+        for file_format in ("svg", "eps"):
+            self.assertIn(
+                reverse("wagtail_qrcode_admin:download", args=[page.pk, file_format]),
+                html,
+            )
+        self.assertIn("42 scans", html)
+        for field in ("qr_code_svg", "qr_code_eps", "qr_code_usage"):
+            self.assertNotIn(field, form.fields)
+            self.assertNotIn(f'name="{field}"', html)
+        self.assertIn('name="email_address"', html)
