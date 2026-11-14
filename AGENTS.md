@@ -8,21 +8,23 @@
 
 ## Build, Test, and Development Commands
 
-Install [uv](https://docs.astral.sh/uv/getting-started/installation/) 0.12.10 or newer, then run:
+Install [uv](https://docs.astral.sh/uv/getting-started/installation/) 0.12.10 or newer and [Just](https://just.systems/man/en/) 1.59.0 or newer, then run:
 
 ```bash
-uv sync --locked
-make sandbox-setup
-make sandbox-run
+just sync
+just sandbox-setup
+just sandbox-run
 ```
 
 These commands create `.venv` and install the editable package and locked contributor tools, initialize the persistent sandbox database and example QR pages, create an `admin` user, and serve the sandbox at `http://localhost:8000`. The generated `admin`/`admin` credentials are for local development only.
 
-- `make test`: run Django tests with coverage and print missing lines.
+- `just` or `just list`: list available contributor commands.
+- `just sync`: install the locked contributor dependencies.
+- `just test`: run Django tests with coverage and print missing lines.
 - `uv run --locked python manage.py test tests.test_cls`: run one test module.
 - `uv run --locked tox`: run the configured Python/Django/Wagtail/database matrix using tox-uv. PostgreSQL and MySQL environments require database services and drivers.
-- `make format`: apply Ruff lint fixes, import sorting, and Python/Markdown code formatting.
-- `make lint`: check Ruff lint and formatting without changing files.
+- `just format`: apply Ruff lint fixes, import sorting, and Python/Markdown code formatting, then format the justfile.
+- `just lint`: check Ruff lint, Python/Markdown code formatting and justfile formatting without changing files.
 - `uv run --locked pre-commit run --all-files`: run configured code and Markdown checks.
 
 Use `uv add --dev <tool>` for contributor dependencies and `uv add <package>` for runtime dependencies. Commit `pyproject.toml` and `uv.lock` together. Use `uv lock --upgrade-package <name>` for targeted lock updates and `uv lock --check` to check freshness. The development lock does not constrain tox framework versions.
@@ -52,7 +54,7 @@ Use four-space Python indentation, `snake_case` functions/modules, and `PascalCa
 
 ## Testing Guidelines
 
-Use Django's `TestCase`, naming files `test_*.py` and methods `test_*`. Add regression tests in the corresponding module under `tests/`. Use `tests/testapp/` for page integration fixtures and `override_settings` for configuration variations. Coverage measures package branch coverage; no minimum percentage is configured. Run `make test` before submitting and relevant tox environments for compatibility changes.
+Use Django's `TestCase`, naming files `test_*.py` and methods `test_*`. Add regression tests in the corresponding module under `tests/`. Use `tests/testapp/` for page integration fixtures and `override_settings` for configuration variations. Coverage measures package branch coverage; no minimum percentage is configured. Run `just test` before submitting and relevant tox environments for compatibility changes.
 
 ## Development & Review Skills
 

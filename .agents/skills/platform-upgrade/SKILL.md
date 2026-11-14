@@ -94,7 +94,7 @@ Ask only when the resolution changes the user's support policy or scope.
 Run the final package checks against the resulting matrix, reusing still-valid
 results where no later change affects them. Cover the target combination, the
 lowest retained boundaries, and affected framework/database combinations. Include
-`make test`, relevant explicit tox environments, Django system and migration
+`just test`, relevant explicit tox environments, Django system and migration
 checks, applicable pre-commit hooks, and packaging checks when required by the
 component changes. Inspect admin behavior when Wagtail UI integration changes.
 

@@ -101,7 +101,7 @@ combinations. Record installed versions so dependency resolution is visible.
 
 ## Validate and report
 
-Run `make test`, relevant explicit tox environments, and
+Run `just test`, relevant explicit tox environments, and
 `python manage.py check` in affected environments. Include the target Django
 release and the oldest retained framework boundary. Exercise the affected
 database backends when services are available, especially when database or

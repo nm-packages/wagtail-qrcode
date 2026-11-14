@@ -25,4 +25,4 @@ if __name__ == "__main__":
             "Pass --yes to delete sandbox/.data; stop the sandbox server first"
         )
     reset_data(Path(__file__).resolve().parent)
-    print("Removed sandbox/.data. Run make sandbox-setup to restore the examples.")
+    print("Removed sandbox/.data. Run just sandbox-setup to restore the examples.")

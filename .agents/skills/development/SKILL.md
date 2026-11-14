@@ -45,7 +45,7 @@ Wagtail where a test would catch a regression and rely on Wagtail's existing
 coverage for framework behavior the package leaves unchanged.
 
 - Use `uv run --locked python manage.py test <test-label>` for focused development checks.
-- Run `make test` for package changes. Run relevant tox environments for
+- Run `just test` for package changes. Run relevant tox environments for
   compatibility changes, especially affected versions and database backends.
 - Run the applicable hooks in `.pre-commit-config.yaml` for changed files or use
   `uv run --locked pre-commit run --all-files` for tracked files. Check links and formatting for
