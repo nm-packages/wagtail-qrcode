@@ -102,6 +102,39 @@ class TestQRCodeEditor(TestCase):
             self.assertNotContains(response, f'name="{name}"')
         self.assertFalse(QRCode.objects.exists())
 
+    def test_alias_editor_links_to_its_own_preview_and_downloads(self):
+        alias = self.page.create_alias(update_slug="alias")
+        chained = alias.create_alias(update_slug="chained")
+        for page in (alias, chained):
+            with self.subTest(page_id=page.pk):
+                response = self.client.get(
+                    reverse("wagtailadmin_pages:edit", args=[page.pk])
+                )
+                preview_url = reverse("wagtail_qrcode_admin:preview", args=[page.pk])
+                self.assertContains(response, f'href="{preview_url}"')
+                self.assertEqual(
+                    self.client.get(preview_url).content,
+                    WagtailQrCode(page).render("svg"),
+                )
+                for file_format in ("svg", "eps"):
+                    download_url = reverse(
+                        "wagtail_qrcode_admin:download", args=[page.pk, file_format]
+                    )
+                    self.assertContains(response, f'href="{download_url}"')
+                    download = self.client.get(download_url)
+                    self.assertEqual(download.status_code, 200)
+                    self.assertEqual(
+                        eps_without_timestamp(download.content),
+                        eps_without_timestamp(WagtailQrCode(page).render(file_format)),
+                    )
+                    self.assertNotEqual(
+                        eps_without_timestamp(download.content),
+                        eps_without_timestamp(
+                            WagtailQrCode(self.page).render(file_format)
+                        ),
+                    )
+        self.assertFalse(QRCode.objects.exists())
+
     def test_repeated_autosave_keeps_live_content_and_sends_no_email(self):
         count = self.page.revisions.count()
         data = self.form_data()

@@ -131,6 +131,10 @@ counts. Each copy, translation and alias uses its own page ID, including chained
 aliases. Deleting a page removes its counter record and leaves no QR files to
 clean up.
 
+On an alias's edit screen, open the header's **Actions** menu for **Preview QR
+code**, **Download QR SVG** and **Download QR EPS**. These use the alias's own
+page ID and require permission to edit the alias.
+
 This design is for new QR usage. Importing existing QR documents, counters or
 legacy revisions is outside the current implementation. Host page models that
 used the old mixin fields need schema migrations when those fields are removed;

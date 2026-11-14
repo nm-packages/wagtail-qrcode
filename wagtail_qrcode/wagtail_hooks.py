@@ -1,8 +1,10 @@
 from django.conf import settings
 from django.core.mail import EmailMessage
 from django.db import transaction
-from django.urls import include, path
+from django.urls import include, path, reverse
+from django.utils.translation import gettext_lazy as _
 from wagtail import hooks
+from wagtail.admin.widgets import Button
 
 from wagtail_qrcode.cls import WagtailQrCode
 from wagtail_qrcode.models import QRCodeMixin
@@ -29,6 +31,29 @@ def register_admin_urls():
             ),
         )
     ]
+
+
+@hooks.register("register_page_header_buttons")
+def alias_qr_code_buttons(page, user, view_name, next_url=None):
+    if (
+        not page.alias_of_id
+        or not issubclass(page.specific_class, QRCodeMixin)
+        or not page.permissions_for_user(user).can_edit()
+    ):
+        return
+    yield Button(
+        _("Preview QR code"),
+        reverse("wagtail_qrcode_admin:preview", args=[page.pk]),
+        icon_name="image",
+        priority=80,
+    )
+    for priority, file_format in enumerate(("svg", "eps"), start=81):
+        yield Button(
+            _("Download QR SVG") if file_format == "svg" else _("Download QR EPS"),
+            reverse("wagtail_qrcode_admin:download", args=[page.pk, file_format]),
+            icon_name="download",
+            priority=priority,
+        )
 
 
 @hooks.register("before_publish_page")

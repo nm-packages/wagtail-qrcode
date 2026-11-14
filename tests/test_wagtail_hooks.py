@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from django.core import mail
 from django.db import transaction
 from django.test import TestCase
@@ -6,7 +7,7 @@ from wagtail.models import Page
 from tests.testapp.models import QRCodePage
 from tests.utils import eps_without_timestamp
 from wagtail_qrcode.cls import WagtailQrCode
-from wagtail_qrcode.wagtail_hooks import send_qr_code_email
+from wagtail_qrcode.wagtail_hooks import alias_qr_code_buttons, send_qr_code_email
 
 
 class TestWagtailHooks(TestCase):
@@ -14,6 +15,20 @@ class TestWagtailHooks(TestCase):
         self.page = Page.objects.get(pk=2).add_child(
             instance=QRCodePage(title="QR page")
         )
+
+    def test_alias_actions_require_qr_page_and_edit_permission(self):
+        admin = get_user_model().objects.create_superuser("admin", "", "password")
+        reader = get_user_model().objects.create_user("reader")
+        alias = self.page.create_alias(update_slug="qr-alias")
+        other = Page.objects.get(pk=2).add_child(instance=Page(title="Other page"))
+        other_alias = other.create_alias(update_slug="other-alias")
+        for page, user in (
+            (self.page, admin),
+            (other_alias, admin),
+            (alias, reader),
+        ):
+            with self.subTest(page_id=page.pk, user=user):
+                self.assertEqual(list(alias_qr_code_buttons(page, user, "edit")), [])
 
     def test_email_attachment_is_generated_after_explicit_request(self):
         with self.captureOnCommitCallbacks(execute=True):
