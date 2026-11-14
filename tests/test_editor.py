@@ -200,18 +200,28 @@ class TestQRCodeEditor(TestCase):
         self.assertEqual(len(mail.outbox), 0)
 
     def test_edit_email_uses_disabled_recipient_from_editor_form(self):
-        data = self.form_data()
-        data["action-publish"] = "Publish"
-        with (
-            patch.object(QRCodePage, "base_form_class", FixedRecipientForm),
-            self.captureOnCommitCallbacks(execute=True),
+        for count, action in enumerate(
+            ("action-save-draft", "action-publish"), start=1
         ):
-            response = self.client.post(self.edit_url, data)
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].to, ["approved@example.com"])
-        self.page.refresh_from_db()
-        self.assertEqual(self.page.title, "Edited title")
+            with self.subTest(action=action):
+                data = self.form_data()
+                data[action] = "1"
+                with (
+                    patch.object(QRCodePage, "base_form_class", FixedRecipientForm),
+                    self.captureOnCommitCallbacks(execute=True),
+                ):
+                    response = self.client.post(self.edit_url, data)
+                self.assertEqual(response.status_code, 302)
+                self.assertEqual(len(mail.outbox), count)
+                self.assertEqual(mail.outbox[-1].to, ["approved@example.com"])
+                if action == "action-save-draft":
+                    self.assert_live_unchanged()
+                    self.assertEqual(
+                        self.page.get_latest_revision().content["title"], "Edited title"
+                    )
+                else:
+                    self.page.refresh_from_db()
+                    self.assertEqual(self.page.title, "Edited title")
 
     def test_create_email_uses_values_cleaned_by_editor_form(self):
         url = reverse(
