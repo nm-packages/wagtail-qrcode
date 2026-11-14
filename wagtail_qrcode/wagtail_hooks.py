@@ -6,6 +6,7 @@ from wagtail import hooks
 
 from wagtail_qrcode.admin_forms import QrCodeEmailFieldsForm, QrCodeEmailForm
 from wagtail_qrcode.cls import WagtailQrCode
+from wagtail_qrcode.email import get_email_defaults
 from wagtail_qrcode.models import QRCodeMixin
 from wagtail_qrcode.views import qr_code_download, qr_code_preview, qr_code_reset
 
@@ -58,9 +59,10 @@ def send_qr_code_email(page, email=None, subject=None, body=None):
     """Render an EPS attachment in memory and send it after commit."""
     if email is None:
         return
+    defaults = get_email_defaults()
     message = EmailMessage(
-        subject=subject if subject is not None else f"QR Code for {page.title}",
-        body=body if body is not None else f"QR Code for {page.title}",
+        subject=subject if subject is not None else defaults["email_subject"],
+        body=body if body is not None else defaults["email_body"],
         from_email=settings.DEFAULT_FROM_EMAIL,
         to=[email],
         attachments=[

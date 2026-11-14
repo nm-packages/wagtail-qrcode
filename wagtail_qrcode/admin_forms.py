@@ -1,6 +1,8 @@
 from django import forms
 from wagtail.admin.forms import WagtailAdminPageForm
 
+from wagtail_qrcode.email import get_email_defaults
+
 
 class QrCodeEmailFieldsForm(forms.Form):
     email_address = forms.EmailField(
@@ -19,6 +21,11 @@ class QrCodeEmailFieldsForm(forms.Form):
         required=False,
         widget=forms.Textarea(attrs={"placeholder": "Body of the email if sent"}),
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for name, value in get_email_defaults().items():
+            self.initial.setdefault(name, value)
 
     def clean(self):
         cleaned_data = super().clean()
