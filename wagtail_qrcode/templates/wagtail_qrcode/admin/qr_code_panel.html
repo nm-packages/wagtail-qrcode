@@ -2,10 +2,22 @@
 {% if preview_url %}
     <p><img src="{{ preview_url }}" alt="{% trans 'QR code preview' %}"></p>
     <p>
-        <a class="button button-secondary" href="{{ svg_url }}">{% trans "Download SVG" %}</a>
-        <a class="button button-secondary" href="{{ eps_url }}">{% trans "Download EPS" %}</a>
+        <a class="button button-secondary button-small" href="{{ svg_url }}">{% trans "Download SVG" %}</a>
+        <a class="button button-secondary button-small" href="{{ eps_url }}">{% trans "Download EPS" %}</a>
     </p>
-    <p>{% blocktrans count counter=usage_count %}{{ counter }} scan{% plural %}{{ counter }} scans{% endblocktrans %}</p>
+    <div data-qr-scan-count>
+        <p data-qr-count-label>{% blocktrans count counter=usage_count %}{{ counter }} scan{% plural %}{{ counter }} scans{% endblocktrans %}</p>
+        {% if reset_url %}
+            <button type="button" class="button button-secondary button-small" data-qr-reset-url="{{ reset_url }}"
+                    data-confirm="{% trans 'Reset this page’s scan count to zero? This cannot be undone.' %}"
+                    data-success="{% trans 'Scan count reset.' %}"
+                    data-error="{% trans 'Could not reset the scan count. Please try again.' %}"
+                    {% if not usage_count %}disabled{% endif %}>
+                {% trans "Reset scan count" %}
+            </button>
+            <p role="status" aria-live="polite" data-qr-reset-status></p>
+        {% endif %}
+    </div>
 {% else %}
     <p>{% trans "Save the page to preview and download its QR code." %}</p>
 {% endif %}

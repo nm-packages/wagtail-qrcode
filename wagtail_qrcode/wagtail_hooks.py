@@ -8,7 +8,7 @@ from wagtail.admin.widgets import Button
 
 from wagtail_qrcode.cls import WagtailQrCode
 from wagtail_qrcode.models import QRCodeMixin
-from wagtail_qrcode.views import qr_code_download, qr_code_preview
+from wagtail_qrcode.views import qr_code_download, qr_code_preview, qr_code_reset
 
 
 @hooks.register("register_admin_urls")
@@ -20,6 +20,7 @@ def register_admin_urls():
                 (
                     [
                         path("<int:page_id>/preview/", qr_code_preview, name="preview"),
+                        path("<int:page_id>/reset/", qr_code_reset, name="reset"),
                         path(
                             "<int:page_id>/download/<str:file_format>/",
                             qr_code_download,

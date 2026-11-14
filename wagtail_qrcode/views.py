@@ -1,11 +1,12 @@
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.db.models import F
-from django.http import Http404, HttpResponse, HttpResponseRedirect
+from django.http import Http404, HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.utils.http import content_disposition_header
+from django.utils.translation import ngettext
 from django.views.decorators.cache import never_cache
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_GET, require_POST
 from wagtail.models import Page
 
 from wagtail_qrcode.cls import WagtailQrCode
@@ -62,6 +63,21 @@ def qr_code_download(request, page_id, file_format):
 @require_GET
 def qr_code_preview(request, page_id):
     return render_qr_response(editable_qr_page(request, page_id), "svg")
+
+
+@never_cache
+@require_POST
+def qr_code_reset(request, page_id):
+    """Reset page-owned statistics without saving revisioned page content."""
+    page = editable_qr_page(request, page_id)
+    QRCode.objects.filter(page_id=page.pk).update(usage_count=0)
+    return JsonResponse(
+        {
+            "usage_count": 0,
+            "count_label": ngettext("%(count)s scan", "%(count)s scans", 0)
+            % {"count": 0},
+        }
+    )
 
 
 def render_qr_response(page, file_format):
