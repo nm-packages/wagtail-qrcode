@@ -12,6 +12,15 @@ This package can be used to create a page in Wagtail CMS that has a correspondin
 
 ## Installation
 
+### Compatibility
+
+Python 3.11–3.15, Django 5.2 LTS–6.1 and Wagtail 7.4 LTS–8.1 are supported in
+compatible combinations. We support Python releases that have not reached end
+of life, and framework releases from the preceding LTS through the latest
+stable release. See the
+[tested combinations and upgrade notes](docs/platform-upgrade.md) before
+choosing versions; newer frameworks require newer Python versions.
+
 To add the package to your own Wagtail CMS
 
 **Install the package into your environment.**
@@ -93,6 +102,20 @@ class QRCodePage(QRCodeMixin, Page):
 
 This will add a new tab in the page editor `QR Code` where you can preview the generated QR code and access the downloadable print ready EPS file. (the file can also be found in the documents app)
 
+Choose **Save draft** or **Publish** to generate or update the QR code. To email
+the EPS file, fill in the recipient, subject and body before choosing either
+action. The email uses the newly generated file and is sent after the save
+transaction commits. Autosave only saves draft content; it does not generate
+QR files, publish edits or send emails.
+
+Saving a draft of a live page keeps its published content and QR files unchanged.
+New EPS documents are retained alongside older files so that published pages
+and saved revisions can continue to use their original documents.
+
+Published page aliases, including chained aliases, receive the source page's
+updated QR assets. Draft and scheduled edits leave aliases unchanged until
+publication.
+
 ### If you don't need to be able to send the qrcode via email your page model can be
 
 ```python
@@ -171,6 +194,10 @@ WAGTAIL_QR_CODE = {
 ## Contributing
 
 If you would like to suggest an improvement to the package [contributions](docs/contrubute.md) are welcome
+
+Create working branches from `main` and target pull requests at `main`.
+Prepare and tag package releases from `main`.
+See the [branch workflow](docs/contrubute.md#branches-and-pull-requests) for details.
 
 ## Issues
 

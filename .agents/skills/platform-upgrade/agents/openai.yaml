@@ -1,0 +1,3 @@
+interface:
+  display_name: "Platform Upgrade"
+  short_description: "Coordinate Python, Django, and Wagtail upgrades"

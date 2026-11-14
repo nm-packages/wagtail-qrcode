@@ -1,0 +1,3 @@
+interface:
+  display_name: "Python Upgrade"
+  short_description: "Update and verify Python support in wagtail-qrcode"

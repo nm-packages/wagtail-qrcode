@@ -1,10 +1,8 @@
 from django import forms
 from wagtail.admin.forms import WagtailAdminPageForm
 
-from wagtail_qrcode.wagtail_hooks import send_qr_code_email
 
-
-class QrCodeEmailForm(WagtailAdminPageForm):
+class QrCodeEmailFieldsForm(forms.Form):
     email_address = forms.EmailField(
         label="Recipient Email",
         required=False,
@@ -25,7 +23,7 @@ class QrCodeEmailForm(WagtailAdminPageForm):
     def clean(self):
         cleaned_data = super().clean()
 
-        if cleaned_data["email_address"]:
+        if cleaned_data.get("email_address"):
             if not cleaned_data["email_subject"]:
                 self.add_error(
                     "email_subject",
@@ -39,16 +37,6 @@ class QrCodeEmailForm(WagtailAdminPageForm):
 
         return cleaned_data
 
-    def save(self, commit=True):
-        page = super().save(commit=False)
 
-        # send email if email_address is available
-        if self.cleaned_data["email_address"]:
-            email_address = self.cleaned_data["email_address"]
-            email_subject = self.cleaned_data["email_subject"]
-            email_body = self.cleaned_data["email_body"]
-            send_qr_code_email(page, email_address, email_subject, email_body)
-
-        if commit:
-            page.save()
-        return page
+class QrCodeEmailForm(QrCodeEmailFieldsForm, WagtailAdminPageForm):
+    """Collect a one-time email request; the editor hooks send it after saving."""
