@@ -4,7 +4,6 @@ from django.db import transaction
 from django.urls import include, path
 from wagtail import hooks
 
-from wagtail_qrcode.admin_forms import QrCodeEmailFieldsForm, QrCodeEmailForm
 from wagtail_qrcode.cls import WagtailQrCode
 from wagtail_qrcode.models import QRCodeMixin
 from wagtail_qrcode.views import qr_code_download, qr_code_preview
@@ -32,25 +31,31 @@ def register_admin_urls():
     ]
 
 
+@hooks.register("before_publish_page")
+def preserve_qr_code_email(request, page):
+    # Publishing reloads the page before the after-edit hook runs.
+    email_data = page.__dict__.pop("_qr_code_email", None)
+    if email_data is not None:
+        request._qr_code_email = {page.pk: email_data}
+
+
 @hooks.register("after_create_page")
 @hooks.register("after_edit_page")
 def email_qr_code(request, page):
     """Handle explicit editor email requests without changing saved content."""
+    published_email_data = request.__dict__.pop("_qr_code_email", {})
+    email_data = page.__dict__.pop("_qr_code_email", None) or published_email_data.get(
+        page.pk
+    )
     if (
         request.method != "POST"
         or not request.accepts("text/html")
         or not isinstance(page, QRCodeMixin)
-        or not issubclass(page.get_edit_handler().get_form_class(), QrCodeEmailForm)
+        or not email_data
+        or not email_data["email"]
     ):
         return
-    email_form = QrCodeEmailFieldsForm(request.POST)
-    if email_form.is_valid() and email_form.cleaned_data["email_address"]:
-        send_qr_code_email(
-            page,
-            email=email_form.cleaned_data["email_address"],
-            subject=email_form.cleaned_data["email_subject"],
-            body=email_form.cleaned_data["email_body"],
-        )
+    send_qr_code_email(page, **email_data)
 
 
 def send_qr_code_email(page, email=None, subject=None, body=None):

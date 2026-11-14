@@ -4,6 +4,7 @@ from io import StringIO
 from pathlib import Path
 from unittest.mock import patch
 
+from django import forms
 from django.contrib.auth import get_user_model
 from django.core import mail
 from django.core.management import call_command
@@ -16,8 +17,26 @@ from wagtail.models import GroupApprovalTask, Page, Workflow, WorkflowPage, Work
 
 from tests.testapp.models import QRCodePage
 from tests.utils import eps_without_timestamp
+from wagtail_qrcode.admin_forms import QrCodeEmailForm
 from wagtail_qrcode.cls import WagtailQrCode
 from wagtail_qrcode.models import QRCode
+
+
+class FixedRecipientForm(QrCodeEmailForm):
+    email_address = forms.EmailField(
+        disabled=True, initial="approved@example.com", required=False
+    )
+
+
+class TransformedEmailForm(QrCodeEmailForm):
+    def clean(self):
+        cleaned_data = super().clean()
+        cleaned_data.update(
+            email_address="approved@example.com",
+            email_subject="Validated subject",
+            email_body="Validated body",
+        )
+        return cleaned_data
 
 
 class TestQRCodeEditor(TestCase):
@@ -146,6 +165,42 @@ class TestQRCodeEditor(TestCase):
         self.assert_live_unchanged()
         self.assertEqual(self.page.revisions.count(), count)
         self.assertEqual(len(mail.outbox), 0)
+
+    def test_edit_email_uses_disabled_recipient_from_editor_form(self):
+        data = self.form_data()
+        data["action-publish"] = "Publish"
+        with (
+            patch.object(QRCodePage, "base_form_class", FixedRecipientForm),
+            self.captureOnCommitCallbacks(execute=True),
+        ):
+            response = self.client.post(self.edit_url, data)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, ["approved@example.com"])
+        self.page.refresh_from_db()
+        self.assertEqual(self.page.title, "Edited title")
+
+    def test_create_email_uses_values_cleaned_by_editor_form(self):
+        url = reverse(
+            "wagtailadmin_pages:add",
+            args=[QRCodePage._meta.app_label, "qrcodepage", self.parent.pk],
+        )
+        data = self.form_data("New page")
+        data["slug"] = "new-page"
+        with (
+            patch.object(QRCodePage, "base_form_class", TransformedEmailForm),
+            self.captureOnCommitCallbacks(execute=True),
+        ):
+            response = self.client.post(url, data)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(len(mail.outbox), 1)
+        message = mail.outbox[0]
+        self.assertEqual(message.to, ["approved@example.com"])
+        self.assertEqual(message.subject, "Validated subject")
+        self.assertEqual(message.body, "Validated body")
+        page = QRCodePage.objects.get(slug="new-page")
+        self.assertFalse(page.live)
+        self.assertNotIn("email_address", page.get_latest_revision().content)
 
     def test_create_autosave_then_save_emails_without_assets(self):
         url = reverse(

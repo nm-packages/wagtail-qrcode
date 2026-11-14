@@ -122,6 +122,8 @@ To email an EPS, fill in the recipient, subject and body before choosing **Save
 draft** or **Publish**. The attachment is rendered in memory and sent after the
 save transaction commits. Autosave does not send email, and later workflow
 approval or scheduled publication does not repeat an earlier email request.
+Emails use the editor form's validated values, including disabled field values
+and custom cleaning in a `QrCodeEmailForm` subclass.
 
 Changing page content does not create or synchronise QR assets. Drafts and
 revisions use the same page identity; restoring a revision does not reset scan

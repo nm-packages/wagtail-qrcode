@@ -40,3 +40,13 @@ class QrCodeEmailFieldsForm(forms.Form):
 
 class QrCodeEmailForm(QrCodeEmailFieldsForm, WagtailAdminPageForm):
     """Collect a one-time email request; the editor hooks send it after saving."""
+
+    def save(self, commit=True):
+        page = super().save(commit=commit)
+        # Transient state on this editor instance, never part of a saved revision.
+        page._qr_code_email = {
+            "email": self.cleaned_data.get("email_address"),
+            "subject": self.cleaned_data.get("email_subject"),
+            "body": self.cleaned_data.get("email_body"),
+        }
+        return page
