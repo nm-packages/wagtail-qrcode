@@ -4,7 +4,7 @@
 
 `wagtail_qrcode/` is the reusable Django/Wagtail package. QR generation lives in `cls.py`; page integration, admin forms, panels, hooks, and redirects live in the corresponding modules. Admin templates are under `wagtail_qrcode/templates/wagtail_qrcode/admin/`.
 
-`tests/` contains Django tests and project settings. `tests/testapp/` supplies example page models, migrations, templates, and static assets. `docs/` contains contributor instructions and MailHog setup. Packaging metadata lives in `pyproject.toml` and `MANIFEST.in`.
+`tests/` contains Django tests and project settings. `tests/testapp/` supplies example page models, migrations, templates, and static assets. `docs/` contains contributor instructions, sandbox setup, and smoke tests. Packaging metadata lives in `pyproject.toml` and `MANIFEST.in`.
 
 ## Build, Test, and Development Commands
 
@@ -12,12 +12,11 @@ Install [uv](https://docs.astral.sh/uv/getting-started/installation/) 0.12.10 or
 
 ```bash
 uv sync --locked
-make migrate
-make admin
-make run
+make sandbox-setup
+make sandbox-run
 ```
 
-These commands create `.venv` and install the editable package and locked contributor tools, initialize the example database, create an `admin` user, and serve the test site at `http://localhost:8000`. The generated `admin`/`admin` credentials are for local development only.
+These commands create `.venv` and install the editable package and locked contributor tools, initialize the persistent sandbox database and example QR pages, create an `admin` user, and serve the sandbox at `http://localhost:8000`. The generated `admin`/`admin` credentials are for local development only.
 
 - `make test`: run Django tests with coverage and print missing lines.
 - `uv run --locked python manage.py test tests.test_cls`: run one test module.
