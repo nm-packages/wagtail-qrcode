@@ -87,6 +87,14 @@ Clear email inputs before unrelated saves.
 
 ## 6. Capture an EPS email
 
+Open the QR Code tab and check that the subject is **Your QR code** and the body
+is **Please find your QR code attached as an EPS file.**, with a blank recipient.
+Check that both messages can be edited. With a recipient entered, clear the body
+and save: validation should retain your input and require a body. Restore the
+body before continuing. Overrides in `sandbox/settings/local.py` using
+`WAGTAIL_QRCODE_EMAIL_SUBJECT` and `WAGTAIL_QRCODE_EMAIL_BODY` should appear after
+restarting the server and reopening the editor.
+
 Enter recipient `reader@example.test`, subject `QR smoke test`, and a body. Choose
 **Save draft**, then run `make sandbox-email`. Optionally repeat with **Publish**.
 

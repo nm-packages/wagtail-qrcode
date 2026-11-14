@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Prefill editable email subject and body fields, configurable with `WAGTAIL_QRCODE_EMAIL_SUBJECT` and `WAGTAIL_QRCODE_EMAIL_BODY`. The sender uses the same defaults when message content is omitted; recipients remain blank and messages are not stored with pages. No migration is required.
+
 - Add a **Reset scan count** button to the admin QR panel for page editors. Confirming resets only that page's counter immediately, preserving unsaved edits without saving, publishing or sending email.
 
 - Add a persistent contributor sandbox with repeatable setup, published/draft examples, local email capture and isolated integration tests. Use `make sandbox-setup` and `make sandbox-run`; previews and SVG/EPS downloads are generated on demand without QR Documents. Package tests now use explicit `tests` discovery, and MailHog tooling is replaced by sandbox file capture. See the sandbox and smoke-test guides; `make sandbox-reset` explicitly discards manual sandbox data.

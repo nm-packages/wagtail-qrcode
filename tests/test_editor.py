@@ -86,6 +86,27 @@ class TestQRCodeEditor(TestCase):
             self.assertNotContains(response, f'name="{name}"')
         self.assertFalse(QRCode.objects.exists())
 
+    def test_editor_prefills_messages_and_sends_them_on_explicit_save(self):
+        response = self.client.get(self.edit_url)
+        form = response.context["form"]
+        subject = form["email_subject"].value()
+        body = form["email_body"].value()
+        self.assertContains(response, 'value="Your QR code"')
+        self.assertContains(
+            response, "Please find your QR code attached as an EPS file."
+        )
+        self.assertIsNone(form["email_address"].value())
+        data = self.form_data()
+        data.update(email_subject=subject, email_body=body)
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self.client.post(self.edit_url, data)
+        self.assertEqual(response.status_code, 302)
+        self.assert_email(self.page)
+        self.assertEqual(mail.outbox[0].subject, subject)
+        self.assertEqual(mail.outbox[0].body, body)
+        response = self.client.get(self.edit_url)
+        self.assertIsNone(response.context["form"]["email_address"].value())
+
     def test_reset_does_not_save_publish_or_email_editor_input(self):
         QRCode.objects.create(page=self.page, usage_count=12)
         revision_count = self.page.revisions.count()

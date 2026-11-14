@@ -1,6 +1,6 @@
 from django.core import mail
 from django.db import transaction
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from wagtail.models import Page
 
 from tests.testapp.models import QRCodePage
@@ -20,8 +20,10 @@ class TestWagtailHooks(TestCase):
             send_qr_code_email(self.page, email="reader@example.com")
             self.assertEqual(len(mail.outbox), 0)
         message = mail.outbox[0]
-        self.assertEqual(message.subject, "QR Code for QR page")
-        self.assertEqual(message.body, message.subject)
+        self.assertEqual(message.subject, "Your QR code")
+        self.assertEqual(
+            message.body, "Please find your QR code attached as an EPS file."
+        )
         self.assertEqual(message.to, ["reader@example.com"])
         self.assertEqual(message.attachments[0][0], f"qr-code-{self.page.pk}.eps")
         self.assertEqual(
@@ -29,6 +31,24 @@ class TestWagtailHooks(TestCase):
             eps_without_timestamp(WagtailQrCode(self.page).render("eps")),
         )
         self.assertEqual(message.attachments[0][2], "application/postscript")
+
+    @override_settings(
+        WAGTAIL_QRCODE_EMAIL_SUBJECT="Site QR code",
+        WAGTAIL_QRCODE_EMAIL_BODY="Here is your attachment.",
+    )
+    def test_sender_uses_settings_when_message_is_omitted(self):
+        with self.captureOnCommitCallbacks(execute=True):
+            send_qr_code_email(self.page, email="reader@example.com")
+        self.assertEqual(mail.outbox[0].subject, "Site QR code")
+        self.assertEqual(mail.outbox[0].body, "Here is your attachment.")
+
+    def test_sender_preserves_explicit_empty_messages(self):
+        with self.captureOnCommitCallbacks(execute=True):
+            send_qr_code_email(
+                self.page, email="reader@example.com", subject="", body=""
+            )
+        self.assertEqual(mail.outbox[0].subject, "")
+        self.assertEqual(mail.outbox[0].body, "")
 
     def test_no_recipient_does_not_render_or_send(self):
         with self.captureOnCommitCallbacks(execute=True):

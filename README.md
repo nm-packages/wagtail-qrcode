@@ -124,10 +124,26 @@ Resetting takes effect immediately and preserves unsaved editor input; it does
 not save or publish the page or send email. It cannot be undone by restoring a
 revision. Subsequent scans start counting again from zero.
 
-To email an EPS, fill in the recipient, subject and body before choosing **Save
-draft** or **Publish**. The attachment is rendered in memory and sent after the
+To email an EPS, enter the recipient and review the prefilled subject and body
+before choosing **Save draft** or **Publish**. Both message fields are editable
+and must be nonempty when a recipient is provided. The recipient starts blank
+each time the editor opens; message fields are not saved with the page.
+The attachment is rendered in memory and sent after the
 save transaction commits. Autosave does not send email, and later workflow
 approval or scheduled publication does not repeat an earlier email request.
+
+Override the default message content in your Django settings:
+
+```python
+WAGTAIL_QRCODE_EMAIL_SUBJECT = "Your QR code"
+WAGTAIL_QRCODE_EMAIL_BODY = "Please find your QR code attached as an EPS file."
+```
+
+These are plain text values, with no template substitution. They also supply the
+defaults when calling `send_qr_code_email()` without a subject or body. Explicit
+initial values supplied by a custom form take precedence over these settings.
+Submitted edits, including cleared fields, are preserved when validation fails.
+No database migration is needed for these form defaults.
 
 Changing page content does not create or synchronise QR assets. Drafts and
 revisions use the same page identity; restoring a revision does not reset scan
