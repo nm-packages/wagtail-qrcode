@@ -28,6 +28,13 @@ class FixedRecipientForm(QrCodeEmailForm):
     )
 
 
+class FixedMessagesForm(QrCodeEmailForm):
+    email_subject = forms.CharField(
+        initial="Approved subject", disabled=True, required=False
+    )
+    email_body = forms.CharField(initial="Approved body", disabled=True, required=False)
+
+
 class TransformedEmailForm(QrCodeEmailForm):
     def clean(self):
         cleaned_data = super().clean()
@@ -260,6 +267,28 @@ class TestQRCodeEditor(TestCase):
                 else:
                     self.page.refresh_from_db()
                     self.assertEqual(self.page.title, "Edited title")
+
+    def test_edit_email_uses_disabled_message_field_initials(self):
+        for count, action in enumerate(
+            ("action-save-draft", "action-publish"), start=1
+        ):
+            with self.subTest(action=action):
+                data = self.form_data()
+                data[action] = "1"
+                with (
+                    patch.object(QRCodePage, "base_form_class", FixedMessagesForm),
+                    self.captureOnCommitCallbacks(execute=True),
+                ):
+                    response = self.client.post(self.edit_url, data)
+                self.assertEqual(response.status_code, 302)
+                self.assertEqual(len(mail.outbox), count)
+                message = mail.outbox[-1]
+                self.assertEqual(message.to, ["recipient@example.com"])
+                self.assertEqual(message.subject, "Approved subject")
+                self.assertEqual(message.body, "Approved body")
+                self.assertEqual(
+                    message.attachments[0][0], f"qr-code-{self.page.pk}.eps"
+                )
 
     def test_create_email_uses_values_cleaned_by_editor_form(self):
         url = reverse(
