@@ -93,9 +93,9 @@ Open the QR Code tab and check that the subject is **Your QR code** and the body
 is **Please find your QR code attached as an EPS file.**, with a blank recipient.
 Check that both messages can be edited. With a recipient entered, clear the body
 and save: validation should retain your input and require a body. Restore the
-body before continuing. Overrides in `sandbox/settings/local.py` using
-`WAGTAIL_QRCODE_EMAIL_SUBJECT` and `WAGTAIL_QRCODE_EMAIL_BODY` should appear after
-restarting the server and reopening the editor.
+body before continuing. Set the `WAGTAIL_QRCODE_EMAIL_SUBJECT` and
+`WAGTAIL_QRCODE_EMAIL_BODY` environment variables when starting `just sandbox-run`
+to check different defaults, then reopen the editor.
 
 Enter recipient `reader@example.test`, subject `QR smoke test`, and a body. Choose
 **Save draft**, then run `just sandbox-email`. Optionally repeat with **Publish**.
@@ -120,17 +120,17 @@ copies, aliases, counts or edited titles.
 
 ## 8. Change rendering settings
 
-Add this to `sandbox/settings/local.py`, then restart:
+Stop the server, then restart with a rendering override:
 
-```python
-WAGTAIL_QR_CODE = {"scale": 4}
+```bash
+WAGTAIL_QR_CODE='{"scale": 4}' just sandbox-run
 ```
 
 Reopen a preview and download both formats, without saving or publishing a page.
 
 **Expected:** New output uses the new scale immediately. Unspecified settings
 retain their defaults. No new Document, saved file or page revision appears.
-Restore the previous setting and restart when finished.
+Restart without the environment override when finished.
 
 ## 9. Restart, repeat setup and run tests
 
