@@ -9,14 +9,16 @@ from pathlib import Path
 from django import VERSION as DJANGO_VERSION
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.staticfiles.management.commands.runserver import (
+    Command as RunserverCommand,
+)
 from django.core import mail
 from django.core.management import call_command
-from django.test import TestCase
+from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
 from home.management.commands.setup_sandbox import Command
 from home.models import HomePage, QRCodePage
 from reset import reset_data
-from wagtail.documents import get_document_model
 from wagtail.models import Page, Site
 
 from wagtail_qrcode.cls import WagtailQrCode
@@ -30,6 +32,14 @@ def eps_without_timestamp(content):
     )
 
 
+class SandboxStartupTests(SimpleTestCase):
+    def test_runserver_loads_application(self):
+        handler = RunserverCommand().get_handler(
+            use_static_handler=True, insecure_serving=False
+        )
+        self.assertTrue(callable(handler))
+
+
 class SandboxTests(TestCase):
     def setUp(self):
         # Migrations are tested by the runner; seed inside this transaction.
@@ -39,7 +49,6 @@ class SandboxTests(TestCase):
         self.user = get_user_model().objects.get(username="admin")
 
     def tearDown(self):
-        self.assertFalse(get_document_model().objects.exists())
         self.assertEqual(list(Path(settings.MEDIA_ROOT).rglob("*")), [])
         super().tearDown()
 
@@ -129,9 +138,17 @@ class SandboxTests(TestCase):
         response = self.client.get(self.page.url)
         self.assertContains(response, self.page.title)
         self.assertContains(response, "<svg")
-        self.assertNotContains(response, "/documents/")
         self.assertEqual(self.client.get(self.draft.url).status_code, 404)
         self.assertFalse(QRCode.objects.exists())
+
+    def test_admin_search_finds_qr_pages(self):
+        self.client.force_login(self.user)
+        url = reverse("wagtailadmin_explore", args=[Page.get_first_root_node().pk])
+        response = self.client.get(url, {"q": "Published"})
+        self.assertContains(response, self.page.title)
+        self.assertContains(
+            response, reverse("wagtailadmin_pages:edit", args=[self.page.pk])
+        )
 
     def test_downloads_are_generated_in_memory_and_require_login(self):
         url = reverse("wagtail_qrcode_admin:download", args=[self.page.pk, "eps"])
@@ -191,7 +208,6 @@ class SandboxTests(TestCase):
         self.assertContains(editor, "Download SVG")
         self.assertContains(editor, "Download EPS")
         self.assertContains(editor, "email_address")
-        self.assertNotContains(editor, 'name="qr_code_eps"')
         live_title = self.page.title
         with self.captureOnCommitCallbacks(execute=True):
             response = self.client.post(
@@ -218,7 +234,7 @@ class SandboxTests(TestCase):
         )
         self.assertFalse(QRCode.objects.exists())
 
-    def test_file_capture_contains_generated_eps_without_a_document(self):
+    def test_file_capture_contains_generated_eps(self):
         with tempfile.TemporaryDirectory() as folder:
             if DJANGO_VERSION >= (6, 1):
                 options = {
@@ -257,21 +273,17 @@ class SandboxTests(TestCase):
 
 
 class ResetTests(TestCase):
-    def test_reset_is_limited_to_sandbox_data_and_preserves_local_settings(self):
+    def test_reset_is_limited_to_sandbox_data(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
             project = root / "sandbox"
             (project / ".data" / "media").mkdir(parents=True)
             (project / ".data" / "media" / "qr.eps").write_text("generated")
-            (project / "settings").mkdir()
-            local = project / "settings" / "local.py"
-            local.write_text("SANDBOX_BASE_URL = 'http://localhost:8000'")
             unrelated = root / "db.sqlite3"
             unrelated.write_text("unrelated")
             reset_data(project)
             reset_data(project)
             self.assertFalse((project / ".data").exists())
-            self.assertTrue(local.exists())
             self.assertEqual(unrelated.read_text(), "unrelated")
 
     def test_reset_refuses_a_symlink(self):

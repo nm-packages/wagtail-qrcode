@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Simplify the contributor sandbox by removing unused generated files and optional apps, including Documents. Use `just sandbox-run` through Django's development server and environment variables for configuration; the standalone WSGI entrypoint, Django admin route and `local.py` overrides are removed. Sandbox migrations now create the current QR page model directly; recreate outdated development databases with `just sandbox-reset`.
+
 - Preserve custom email subject and body field initials when applying message defaults, including disabled fields, empty strings and callables. Constructor `initial=` values retain precedence; custom forms no longer send substituted default text.
 
 - Replace the Makefile with a documented justfile. Install Just 1.59.0 or newer and use `just <recipe>` with the existing command names; `just` lists available commands. CI uses pinned Just, and `just format` / `just lint` also format or check the justfile.

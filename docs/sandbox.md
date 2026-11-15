@@ -5,6 +5,8 @@ checkout. Its examples use the same in-memory QR renderer as the package: setup,
 page saves, previews and downloads create no QR files or Documents.
 
 This is a development site with a known password, intended for your own machine.
+It runs with the locked contributor dependencies installed by `just sync`.
+The package's framework compatibility matrix is tested separately with tox.
 
 ## Install, set up and start
 
@@ -29,6 +31,13 @@ the Wagtail Site for localhost on port 8000, and creates:
 
 `uv sync` installs the checkout in editable mode. The server reloads Python
 changes; restart after changing settings and run setup after adding migrations.
+
+The sandbox uses Django's development server through `sandbox/manage.py`, with
+no standalone WSGI entrypoint. It includes the Wagtail admin and QR examples;
+public search, Documents, Django admin, form builder, URL-history redirects,
+embeds and snippets are omitted. QR scan redirects continue to use the package's
+page-ID endpoint, including after a page's slug changes.
+`wagtail.search` remains installed for Wagtail's built-in admin search.
 
 Repeat `just sandbox-setup` whenever necessary. It preserves existing users,
 passwords, titles, slugs, revisions and scan counts. Missing examples are
@@ -69,10 +78,9 @@ Use the explicit labels to keep each suite's discovery separate. The root
 `manage.py`, `just migrate`, `just admin` and `just run` belong to the older test
 fixture site; use `sandbox-` recipes for this persistent environment.
 
-Existing sandbox databases receive a schema migration that removes the old QR
-asset fields. Page content and logins remain, but old QR counters are not imported
-and historical document files are not cleaned up. Legacy QR data conversion is
-outside the current design. The root database and media are left untouched.
+Sandbox migrations create the current page models directly, without historical
+QR asset fields or document-library dependencies. Use `just sandbox-reset` to
+recreate development data if an older sandbox's schema is out of date.
 
 ## Local email and attachments
 
@@ -99,12 +107,10 @@ Both contain vector artwork.
 
 ## Configuration and another device
 
-No tunnel is required for localhost. Copy `sandbox/settings/local.py.example` to
-`sandbox/settings/local.py` for persistent overrides. This file is ignored and
-survives setup/reset. Its `SANDBOX_BASE_URL` takes precedence over the environment
-variable of the same name.
+No tunnel is required for localhost. Configure the sandbox with environment
+variables; it does not load a `local.py` settings file.
 
-For a phone on the same LAN, replace the example with this computer's LAN address
+For a phone on the same LAN, use this computer's LAN address
 and allow access to port 8000. Use the same origin for both commands:
 
 ```bash
@@ -123,8 +129,18 @@ The payload is `ORIGIN/qr-code/?id=PAGE_ID`. A phone cannot reach this Mac using
 `localhost`; open the configured homepage on the phone before testing its scan.
 Printed codes require the encoded domain and route to stay reachable.
 
-To return to localhost, remove the override or change `local.py`, run setup and
-restart. Newly generated outputs use localhost again.
+To return to localhost, unset `SANDBOX_BASE_URL`, run setup and restart.
+Newly generated outputs use localhost again.
+
+Email defaults and QR rendering options can also be set when starting the server:
+
+```bash
+WAGTAIL_QRCODE_EMAIL_SUBJECT='Sandbox QR code' \
+WAGTAIL_QRCODE_EMAIL_BODY='Here is your QR code.' \
+WAGTAIL_QR_CODE='{"scale": 4}' just sandbox-run
+```
+
+`WAGTAIL_QR_CODE` takes a JSON object. Omitted options use the package defaults.
 
 ## Explicit reset
 
@@ -137,8 +153,8 @@ just sandbox-reset
 This deletes **all** sandbox database content, uploaded media, captured messages
 and extracted attachments under `sandbox/.data/`, then restores the examples and
 initial login. Back up that directory first to retain manual edits. Reset
-preserves `sandbox/settings/local.py`, the root database and files outside
-`sandbox/.data/`. A symlinked data directory is refused.
+preserves the root database and files outside `sandbox/.data/`. A symlinked data
+directory is refused.
 
 To remove data without reseeding, use
 `uv run --locked python sandbox/reset.py --yes`. Ordinary setup never resets data.
