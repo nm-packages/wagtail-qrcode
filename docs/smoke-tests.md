@@ -6,7 +6,9 @@ Use disposable pages for copy and deletion checks; keep manual edits you need.
 
 ## 1. Set up and inspect the examples
 
-Run `uv sync --locked`, `make sandbox-setup` and `make sandbox-run`. Open
+Follow the [contributor setup](contrubute.md#install-uv-and-just-then-sync-dependencies)
+to install uv and Just, then run `just sync`, `just sandbox-setup` and
+`just sandbox-run`. Open
 <http://localhost:8000/> and sign into <http://localhost:8000/admin/> with
 `admin` / `admin` (unless you have changed that user's password).
 
@@ -96,7 +98,7 @@ body before continuing. Overrides in `sandbox/settings/local.py` using
 restarting the server and reopening the editor.
 
 Enter recipient `reader@example.test`, subject `QR smoke test`, and a body. Choose
-**Save draft**, then run `make sandbox-email`. Optionally repeat with **Publish**.
+**Save draft**, then run `just sandbox-email`. Optionally repeat with **Publish**.
 
 **Expected:** Each explicit email request produces one captured message with the
 requested fields and a `qr-code-PAGE_ID.eps` attachment. Extraction writes an EPS
@@ -133,8 +135,8 @@ Restore the previous setting and restart when finished.
 ## 9. Restart, repeat setup and run tests
 
 Record edited titles/slugs, unpublished content, scan counts and captured email.
-Stop the server, run `make sandbox-setup` twice, `make test`, and
-`make sandbox-test`, then restart with `make sandbox-run`.
+Stop the server, run `just sandbox-setup` twice, `just test`, and
+`just sandbox-test`, then restart with `just sandbox-run`.
 
 **Expected:** Both suites pass. Manual pages, passwords, revisions, counts and
 captured mail remain available, with one copy of each seeded example. Tests use
@@ -157,7 +159,7 @@ code. It should reach that page and increase its count. No page save is required
 to apply a new origin. Restore local configuration afterwards if desired.
 
 To discard manual sandbox content, stop the server and back up `sandbox/.data/`
-if needed, then explicitly run `make sandbox-reset` and `make sandbox-run`.
+if needed, then explicitly run `just sandbox-reset` and `just sandbox-run`.
 
 **Expected:** Reset restores the two examples and `admin` / `admin`, with no
 counters or stored QR assets. Local settings and files outside `sandbox/.data/`

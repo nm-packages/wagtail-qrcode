@@ -257,7 +257,9 @@ is not archived.
 
 ## Local demonstration
 
-Run `uv sync --locked`, `make sandbox-setup` and `make sandbox-run` to explore
+Install uv 0.12.10 or newer and Just 1.59.0 or newer following the
+[contributor setup](docs/contrubute.md#install-uv-and-just-then-sync-dependencies).
+Run `just sync`, `just sandbox-setup` and `just sandbox-run` to explore
 this checkout at <http://localhost:8000/> (initial admin login: `admin` / `admin`).
 The persistent sandbox has published and draft examples using on-demand QR
 previews, SVG/EPS downloads and page-owned scan counts, without QR Documents.

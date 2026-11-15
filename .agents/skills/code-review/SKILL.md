@@ -64,7 +64,7 @@ framework version. Follow relevant technical skill guidance for API
 details. Do not report a hypothetical failure that existing validation,
 permissions, or framework behaviour already prevents.
 
-Use focused Django tests, `make test`, or relevant tox environments as needed,
+Use focused Django tests, `just test`, or relevant tox environments as needed,
 following the development skill's verification guidance. Inspect tests and
 rendered output where they can resolve a concern. Preserve the working tree
 during verification.

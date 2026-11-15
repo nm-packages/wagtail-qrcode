@@ -8,12 +8,14 @@ This is a development site with a known password, intended for your own machine.
 
 ## Install, set up and start
 
-From the repository root, with Python 3.11 or newer and uv 0.12.10 or newer:
+Install Python 3.11 or newer, uv 0.12.10 or newer and Just 1.59.0 or newer
+(see [contributor setup](contrubute.md#install-uv-and-just-then-sync-dependencies)).
+From the repository root:
 
 ```bash
-uv sync --locked
-make sandbox-setup
-make sandbox-run
+just sync
+just sandbox-setup
+just sandbox-run
 ```
 
 Open <http://localhost:8000/> and <http://localhost:8000/admin/>.
@@ -28,7 +30,7 @@ the Wagtail Site for localhost on port 8000, and creates:
 `uv sync` installs the checkout in editable mode. The server reloads Python
 changes; restart after changing settings and run setup after adding migrations.
 
-Repeat `make sandbox-setup` whenever necessary. It preserves existing users,
+Repeat `just sandbox-setup` whenever necessary. It preserves existing users,
 passwords, titles, slugs, revisions and scan counts. Missing examples are
 recreated without overwriting other pages with the same slug. Copies and aliases
 have their own page-ID codes and do not duplicate the setup identity markers.
@@ -50,8 +52,8 @@ stored there by previews or downloads. A page-owned counter row is created only
 on its first successful scan redirect.
 
 ```bash
-make test
-make sandbox-test
+just test
+just sandbox-test
 ```
 
 Package tests use the root project's settings. Sandbox tests use their own
@@ -64,8 +66,8 @@ uv run --locked python sandbox/manage.py test home
 ```
 
 Use the explicit labels to keep each suite's discovery separate. The root
-`manage.py`, `make migrate`, `make admin` and `make run` belong to the older test
-fixture site; use `sandbox-` targets for this persistent environment.
+`manage.py`, `just migrate`, `just admin` and `just run` belong to the older test
+fixture site; use `sandbox-` recipes for this persistent environment.
 
 Existing sandbox databases receive a schema migration that removes the old QR
 asset fields. Page content and logins remain, but old QR counters are not imported
@@ -81,7 +83,7 @@ included in the captured MIME message; it is not registered as a Document.
 Autosave sends no message.
 
 ```bash
-make sandbox-email
+just sandbox-email
 ```
 
 This prints the latest message and explicitly extracts its EPS attachment to
@@ -106,8 +108,8 @@ For a phone on the same LAN, replace the example with this computer's LAN addres
 and allow access to port 8000. Use the same origin for both commands:
 
 ```bash
-SANDBOX_BASE_URL=http://192.168.1.10:8000 make sandbox-setup
-SANDBOX_BASE_URL=http://192.168.1.10:8000 make sandbox-run
+SANDBOX_BASE_URL=http://192.168.1.10:8000 just sandbox-setup
+SANDBOX_BASE_URL=http://192.168.1.10:8000 just sandbox-run
 ```
 
 The origin aligns the QR URL, allowed hosts, CSRF origin and admin base URL;
@@ -129,7 +131,7 @@ restart. Newly generated outputs use localhost again.
 Stop the sandbox server before running:
 
 ```bash
-make sandbox-reset
+just sandbox-reset
 ```
 
 This deletes **all** sandbox database content, uploaded media, captured messages

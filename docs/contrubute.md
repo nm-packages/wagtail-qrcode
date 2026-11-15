@@ -49,23 +49,42 @@ during release preparation.
 git clone --branch main https://github.com/nm-packages/wagtail-qrcode
 ```
 
-## Install uv and sync dependencies
+## Install uv and Just, then sync dependencies
 
 Install [uv](https://docs.astral.sh/uv/getting-started/installation/) 0.12.10 or
-newer, then run:
+newer and [Just](https://just.systems/man/en/) 1.59.0 or newer.
+On macOS with Homebrew:
 
 ```bash
-uv sync --locked
+brew install just
+just --version
+```
+
+See the [Just installation instructions](https://just.systems/man/en/packages.html)
+for other systems. Just is installed separately from the Python dependencies;
+CI uses Just 1.59.0. Recipes require a POSIX-compatible `sh` (on Windows, use
+Git for Windows with `sh` on `PATH`).
+
+Then install the locked contributor dependencies:
+
+```bash
+just sync
 ```
 
 This creates `.venv` and installs the package in editable mode, together with
 Ruff, coverage, pre-commit, tox and its plugins from `uv.lock`. No activation is
-needed: Make targets use `uv run --locked`. To choose an interpreter explicitly,
+needed: Just recipes use `uv run --locked`. To choose an interpreter explicitly,
 use `uv sync --locked --python 3.11` (or another supported Python version).
 
 The former `development` and `testing` extras are replaced by the `dev`
 dependency group. Existing contributors should switch to the commands above.
 Normal installation of the published package with pip remains supported.
+
+Run `just` or `just list` to see available recipes. The root `justfile` replaces
+the Makefile: use `just <recipe>` with the same command names. Recipes run from
+the repository root, including when invoked from a subdirectory. Keep environment
+overrides before the command, for example
+`SANDBOX_BASE_URL=http://192.168.1.10:8000 just sandbox-run`.
 
 ### Updating dependencies
 
@@ -94,28 +113,28 @@ templates via `MANIFEST.in`.
 ## Run the persistent sandbox
 
 ```bash
-make sandbox-setup
-make sandbox-run
+just sandbox-setup
+just sandbox-run
 ```
 
 Open <http://localhost:8000/> or <http://localhost:8000/admin/> and log in with
 `admin` / `admin`. Setup is repeatable and preserves edits and existing passwords.
 The [sandbox guide](sandbox.md) explains local configuration, captured email,
-optional device testing and the explicit `make sandbox-reset` operation.
+optional device testing and the explicit `just sandbox-reset` operation.
 Use the [developer smoke tests](smoke-tests.md) to verify the manual workflows.
 
-The root `manage.py`, `make migrate`, `make admin` and `make run` remain available
-for the older automated test fixture site. Use the `sandbox-` targets for manual
+The root `manage.py`, `just migrate`, `just admin` and `just run` remain available
+for the older automated test fixture site. Use the `sandbox-` recipes for manual
 testing so content, counts and captured email persist separately from the test suite;
 QR previews and downloads are generated in memory.
 
 ## Other commands
 
-- `make test`: run package tests in `tests/` with coverage.
-- `make sandbox-test`: run sandbox integration tests with isolated database/media.
-- `make sandbox-email`: print the latest captured email and extract its EPS.
-- `make format`: apply Ruff fixes and format Python and Markdown code blocks.
-- `make lint`: check lint and formatting without changing files.
+- `just test`: run package tests in `tests/` with coverage.
+- `just sandbox-test`: run sandbox integration tests with isolated database/media.
+- `just sandbox-email`: print the latest captured email and extract its EPS.
+- `just format`: apply Ruff fixes and format Python and Markdown code blocks, then format the justfile.
+- `just lint`: check lint and Python/Markdown/justfile formatting without changing files.
 
 When invoking the root test runner directly, use
 `uv run --locked python manage.py test tests` to keep discovery within the package
@@ -126,10 +145,12 @@ Tox defaults to package tests; pass a specific label with
 ## Formatting and linting
 
 Run `uv sync --locked` to install the locked contributor tools.
-Run `make format` before committing and `make lint` to run the same checks as CI.
+Run `just format` before committing and `just lint` to run the same checks as CI.
 Run `uv run --locked pre-commit install` to enable hooks and
 `uv run --locked pre-commit run --all-files` to check all tracked files, including Markdown prose.
 Ruff lint fixes run before formatting; PyMarkdown remains the Markdown checker.
+`just format` also formats the justfile; `just lint` checks it with
+`just --fmt --check`, including in CI.
 
 Ruff replaces Black, isort, Flake8 and blacken-docs. The development dependency,
 `required-version` and pre-commit hook revision must be updated together. CI

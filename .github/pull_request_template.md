@@ -17,7 +17,7 @@ including work added after opening the PR. Remove sections that do not apply.
 ## Validation
 
 <!--
-List actual commands and results. For code changes, include make test; for
+List actual commands and results. For code changes, include just test; for
 compatibility changes, include relevant tox environments and the actual Python,
 Django, Wagtail, and database versions tested. For documentation-only changes,
 report applicable pre-commit checks.

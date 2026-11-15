@@ -2,15 +2,17 @@
 
 ## Unreleased
 
+- Replace the Makefile with a documented justfile. Install Just 1.59.0 or newer and use `just <recipe>` with the existing command names; `just` lists available commands. CI uses pinned Just, and `just format` / `just lint` also format or check the justfile.
+
 - Prefill editable email subject and body fields, configurable with `WAGTAIL_QRCODE_EMAIL_SUBJECT` and `WAGTAIL_QRCODE_EMAIL_BODY`. The sender uses the same defaults when message content is omitted; recipients remain blank and messages are not stored with pages. No migration is required.
 
 - Add a **Reset scan count** button to the admin QR panel for page editors. Confirming resets only that page's counter immediately, preserving unsaved edits without saving, publishing or sending email.
 
-- Add a persistent contributor sandbox with repeatable setup, published/draft examples, local email capture and isolated integration tests. Use `make sandbox-setup` and `make sandbox-run`; previews and SVG/EPS downloads are generated on demand without QR Documents. Package tests now use explicit `tests` discovery, and MailHog tooling is replaced by sandbox file capture. See the sandbox and smoke-test guides; `make sandbox-reset` explicitly discards manual sandbox data.
+- Add a persistent contributor sandbox with repeatable setup, published/draft examples, local email capture and isolated integration tests. Use `just sandbox-setup` and `just sandbox-run`; previews and SVG/EPS downloads are generated on demand without QR Documents. Package tests now use explicit `tests` discovery, and MailHog tooling is replaced by sandbox file capture. See the sandbox and smoke-test guides; `just sandbox-reset` explicitly discards manual sandbox data.
 
-- Adopt uv and a committed lockfile for contributor dependencies. Replace the development/testing extras with a `dev` dependency group; use `uv sync --locked` and `uv run --locked`. Make targets and CI use the locked tools, and tox uses uv while retaining its independent framework compatibility matrix.
+- Adopt uv and a committed lockfile for contributor dependencies. Replace the development/testing extras with a `dev` dependency group; use `uv sync --locked` and `uv run --locked`. Just recipes and CI use the locked tools, and tox uses uv while retaining its independent framework compatibility matrix.
 
-- Replace Black, isort, Flake8 and blacken-docs with pinned Ruff checks in development, pre-commit and CI. Run `uv sync --locked`; use `make format` to apply fixes and format Python/documentation examples, and `make lint` for non-mutating checks.
+- Replace Black, isort, Flake8 and blacken-docs with pinned Ruff checks in development, pre-commit and CI. Run `uv sync --locked`; use `just format` to apply fixes and format Python/documentation examples, and `just lint` for non-mutating checks.
 
 - Replace stored QR documents and page asset fields with on-demand SVG/EPS previews, downloads and email attachments. QR output embeds the page-ID scan URL; copies, translations and aliases each use their own ID. Downloads check page edit permission. Run migrations for the new page-owned scan counter and generate host migrations to remove the former mixin fields; legacy QR data conversion is outside this change.
 - Keep scan counts outside page revisions and increment them atomically without saving page content. Only live QR pages redirect; malformed IDs return 404. Restoring a revision does not reset counts, and deleting a page removes its counter.

@@ -96,7 +96,7 @@ Python, Django, and Wagtail versions used so resolver choices are visible.
 - Enumerate the tox environments with the installed tox version's listing
   command and check that CI selects the intended factors for each Python and
   database job.
-- Run `make test` and relevant explicit tox environments on the new interpreter
+- Run `just test` and relevant explicit tox environments on the new interpreter
   and the lowest retained interpreter, covering affected framework boundaries.
   Exercise PostgreSQL and MySQL combinations when drivers or database behavior
   are affected and services are available.
