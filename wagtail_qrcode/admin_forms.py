@@ -25,7 +25,8 @@ class QrCodeEmailFieldsForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for name, value in get_email_defaults().items():
-            self.initial.setdefault(name, value)
+            if self.fields[name].initial is None:
+                self.initial.setdefault(name, value)
 
     def clean(self):
         cleaned_data = super().clean()

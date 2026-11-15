@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Preserve custom email subject and body field initials when applying message defaults, including disabled fields, empty strings and callables. Constructor `initial=` values retain precedence; custom forms no longer send substituted default text.
+
 - Replace the Makefile with a documented justfile. Install Just 1.59.0 or newer and use `just <recipe>` with the existing command names; `just` lists available commands. CI uses pinned Just, and `just format` / `just lint` also format or check the justfile.
 
 - Prefill editable email subject and body fields, configurable with `WAGTAIL_QRCODE_EMAIL_SUBJECT` and `WAGTAIL_QRCODE_EMAIL_BODY`. The sender uses the same defaults when message content is omitted; recipients remain blank and messages are not stored with pages. No migration is required.

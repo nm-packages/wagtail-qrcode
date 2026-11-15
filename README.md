@@ -142,8 +142,10 @@ WAGTAIL_QRCODE_EMAIL_BODY = "Please find your QR code attached as an EPS file."
 ```
 
 These are plain text values, with no template substitution. They also supply the
-defaults when calling `send_qr_code_email()` without a subject or body. Explicit
-initial values supplied by a custom form take precedence over these settings.
+defaults when calling `send_qr_code_email()` without a subject or body. Constructor
+`initial=` values take precedence over custom field initials, which take
+precedence over these settings. Field initials may be text, an empty string or a
+callable; disabled message fields retain their initial values when sending.
 Submitted edits, including cleared fields, are preserved when validation fails.
 No database migration is needed for these form defaults.
 
