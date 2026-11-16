@@ -22,6 +22,9 @@ compatibility changes, include relevant tox environments and the actual Python,
 Django, Wagtail, and database versions tested. For documentation-only changes,
 report applicable pre-commit checks.
 
+For behavior changes, include failing-test evidence and passing validation,
+or explain the TDD exception and alternative verification.
+
 Explain failures, skipped checks, or tests not run. Link CI results with their
 commit or revision; distinguish earlier passing runs from checks for the current
 head. Update this section when later commits affect the results.

@@ -54,6 +54,9 @@ Use four-space Python indentation, `snake_case` functions/modules, and `PascalCa
 
 ## Testing Guidelines
 
+Follow the [test driven development workflow](docs/contrubute.md#test-driven-development)
+for features and bug fixes that change package behavior.
+
 Use Django's `TestCase`, naming files `test_*.py` and methods `test_*`. Add regression tests in the corresponding module under `tests/`. Use `tests/testapp/` for page integration fixtures and `override_settings` for configuration variations. Coverage measures package branch coverage; no minimum percentage is configured. Run `just test` before submitting and relevant tox environments for compatibility changes.
 
 ## Development & Review Skills

@@ -24,6 +24,8 @@
 
 ### Contributor changes
 
+- Document the
+  [test driven development workflow](docs/contrubute.md#test-driven-development).
 - Adopt uv, Just and Ruff for dependencies, commands and formatting. Follow the
   updated [contributor guide](docs/contrubute.md).
 - Add a persistent [sandbox](docs/sandbox.md) with example pages and local email

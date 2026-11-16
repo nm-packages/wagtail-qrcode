@@ -40,6 +40,24 @@ See the [sandbox guide](sandbox.md) for login, settings and reset, and
 [smoke tests](smoke-tests.md) for manual checks. The root `manage.py` and
 `just migrate`, `just admin`, `just run` serve the older test fixture site.
 
+## Test driven development
+
+Use test driven development for features and bug fixes that change package
+behavior. Inspect existing code, clarify the intended behavior, and design the
+interface first if needed, then work in small increments:
+
+1. Write a focused test of an observable outcome. For a bug fix, reproduce the
+   defect. Assert public behavior rather than implementation details.
+2. Run it before implementation and confirm it fails because the intended
+   behavior is missing or incorrect.
+3. Implement the smallest change that makes it pass, then run it again.
+4. Refactor while keeping tests passing, then run the checks below.
+
+In the PR, report the failing-test command and reason alongside passing
+validation. If a test cannot reasonably precede implementation, explain why and
+provide alternative verification. Changes without observable behavior, such as
+documentation or formatting, do not require new tests.
+
 ## Checks
 
 Run `just test` for package changes and `just lint` before submitting.
