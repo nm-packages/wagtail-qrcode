@@ -2,19 +2,36 @@
 
 ## Unreleased
 
-- Generate QR previews, SVG/EPS downloads and email attachments on demand, without Documents or page asset fields. Codes follow each page's ID, including copies, translations and chained aliases. Downloads require edit permission; aliases have QR actions in the header menu.
-- Store scan counts outside revisions and increment them atomically. Only live QR pages redirect; malformed IDs return 404. Restoring revisions leaves counts alone; deleting a page removes its counter. Editors can reset counts immediately without losing unsaved input.
-- Send EPS emails after an explicit save commits, using validated form values. Autosave sends nothing. Prefill editable subject and body fields with `WAGTAIL_QRCODE_EMAIL_SUBJECT` and `WAGTAIL_QRCODE_EMAIL_BODY`; recipients start blank and messages are not stored. Custom field initials, disabled fields and cleaning are respected; constructor `initial=` takes precedence.
-- Run package migrations for the new counter table and host migrations to remove old mixin fields. Legacy documents, counters and revisions are not converted. Remove `collection_name` and `svg_has_doc_type_declaration` settings; SVG always includes its namespace.
-- Apply a rolling support policy: non-EOL Python releases and framework releases from the preceding LTS through latest stable, in compatible combinations. Current ranges are Python 3.11–3.15, Django 5.2–6.1 and Wagtail 7.4–8.1. Upgrade older installations to the new minimums.
-- Run 34 tox environments by default: all 28 SQLite combinations and three Django/Wagtail pairs on Python 3.14 for each of PostgreSQL and MySQL. All 84 combinations remain selectable. Tox forwards database settings; CI uses PostgreSQL 16 and MySQL 8.4 on Ubuntu 24.04.
-- Fix PostgreSQL test configuration and remove assumptions that database IDs restart at one. Use `MAILERS` on Django 6.1 and retain older email settings on Django 5.2 and 6.0.
-- Use uv with a committed contributor lock and a `dev` dependency group instead of development/testing extras. Tox resolves its framework matrix separately.
-- Replace Make with Just 1.59.0+ and Black/isort/Flake8/blacken-docs with pinned Ruff. Use `just sync`, `just format` and `just lint`; CI uses the same locked tools and checks justfile formatting.
-- Add a persistent sandbox with published/draft examples and local email capture, replacing MailHog. Use `just sandbox-setup` and `just sandbox-run`; package and sandbox tests have separate discovery and data.
-- Simplify the sandbox to the QR examples and Wagtail admin, without Documents, Django admin, a WSGI entrypoint or `local.py` overrides. Configure it through environment variables. Recreate outdated sandbox schemas with `just sandbox-reset`, which deletes manual sandbox data.
-- Add development, review and platform upgrade skills. Use `main` for contribution and release preparation; retire `release`. Add a PR template and require current descriptions, validation results and notable-change entries.
-- Shorten the README and contributor guides, remove repeated instructions, and align repository links and tooling notes.
+### Breaking changes
+
+- Require Python 3.11+, Django 5.2+ and Wagtail 7.4+. See the
+  [supported combinations](README.md#installation).
+- Replace the mixin's stored QR fields with on-demand output and a separate
+  counter table. Run package and host migrations; preserve existing scan counts
+  before removing the old fields. Legacy documents, counts and revisions are
+  not converted automatically. Follow the [upgrade guide](docs/upgrading.md).
+- Remove the `collection_name` and `svg_has_doc_type_declaration` settings.
+
+### Features and fixes
+
+- Generate QR previews, SVG/EPS downloads and email attachments on demand.
+  Downloads require page edit permission. Copies, translations and aliases have
+  their own codes and counts.
+- Keep scan counts independent of revisions and add an editor control to reset
+  them. Only live QR pages redirect; invalid IDs return 404.
+- Send email after an explicit save commits; autosave sends nothing. Add
+  configurable [subject and body defaults](README.md#configuration).
+
+### Contributor changes
+
+- Adopt uv, Just and Ruff for dependencies, commands and formatting. Follow the
+  updated [contributor guide](docs/contrubute.md).
+- Add a persistent [sandbox](docs/sandbox.md) with example pages and local email
+  capture, replacing MailHog.
+- Expand compatibility testing and fix PostgreSQL test configuration. See the
+  [test matrix](docs/platform-upgrade.md#databases-and-validation).
+- Use `main` for contributions and releases; retire the `release` branch.
+  Add contributor skills and a PR template, and simplify the documentation.
 
 ## [2.1.1] - 2025-05-16
 

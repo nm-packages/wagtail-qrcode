@@ -1,4 +1,8 @@
-# Platform compatibility
+# Maintaining platform support
+
+This guide is for contributors updating the package's Python, Django and
+Wagtail support policy, dependencies and test matrix. Site developers upgrading
+an installed package should follow the [upgrade guide](upgrading.md).
 
 ## Support policy
 
@@ -29,7 +33,7 @@ Wagtail 7.4–8.1:
 Use the latest patches. Python 3.14 needs Django 5.2.8+ on the 5.2 series;
 Python 3.15 needs Django 6.1.3+. Tox applies these minimums to each series.
 
-Recheck upstream sources when upgrading:
+Recheck upstream sources when changing the package's supported versions:
 
 - [Python lifecycles](https://devguide.python.org/versions/)
 - [Django support](https://www.djangoproject.com/download/#supported-versions)
@@ -37,19 +41,16 @@ Recheck upstream sources when upgrading:
 - [Wagtail support](https://github.com/wagtail/wagtail/wiki/Release-schedule)
   and [Django/Python compatibility](https://docs.wagtail.org/en/stable/releases/upgrading.html#compatible-django-python-versions)
 
-## Upgrading
+## Update package support
 
-Upgrade installations below Python 3.11, Django 5.2 or Wagtail 7.4 before using
-this revision. Django is supplied through the Wagtail dependency.
-Follow intermediate framework upgrade notes for host models and content;
-tests on fresh databases do not verify an existing site's migration.
+Keep requirements, classifiers, tox, CI, formatter targets and the
+[public compatibility table](../README.md#installation) aligned when changing
+supported versions. Apply the rolling policy above and test only combinations
+supported by both frameworks and the interpreter.
 
-The package uses standard `wagtail.models.Page`. Wagtail 8 custom base page
-models require separate adaptation of the redirect view and counter relation.
-
-Django 6.1 uses `MAILERS` in the test site and sandbox; older versions use
-`EMAIL_BACKEND`. See [Django's email migration guide](https://docs.djangoproject.com/en/6.1/topics/email/#migrating-email-to-mailers).
-For the QR storage changes, see [host migration notes](../README.md#upgrading-from-stored-qr-assets).
+Check the test site and sandbox for framework API changes too. Their email
+configuration uses `MAILERS` on Django 6.1 and `EMAIL_BACKEND` on older versions.
+See [Django's email migration guide](https://docs.djangoproject.com/en/6.1/topics/email/#migrating-email-to-mailers).
 
 ## Databases and validation
 

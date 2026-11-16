@@ -12,10 +12,25 @@ QR files are generated on demand, without Wagtail Documents or stored assets.
 
 ![QR code controls in Wagtail](docs/scan-count-reset.jpg)
 
+## Upgrading from v2.1.1 (read this first)
+
+Upgrading from 2.1.1 requires application changes and a planned data migration.
+Follow the [upgrade guide](docs/upgrading.md) to preserve scan counts, keep
+printed codes working and update your site's integrations before deploying.
+
 ## Installation
 
-Supports Python 3.11–3.15, Django 5.2–6.1 and Wagtail 7.4–8.1 in
-[compatible combinations](docs/platform-upgrade.md#compatible-combinations).
+Use one of these supported combinations:
+
+| Wagtail | Django | Python |
+| --- | --- | --- |
+| 7.4 LTS, 8.0, 8.1 | 5.2 LTS | 3.11–3.14 |
+| 7.4 LTS, 8.0, 8.1 | 6.0 | 3.12–3.14 |
+| 8.0 | 6.1 | 3.12–3.14 |
+| 8.1 | 6.1 | 3.12–3.15 |
+
+Use the latest patch releases. Python 3.14 requires Django 5.2.8+ on the 5.2
+series; Python 3.15 requires Django 6.1.3+.
 
 ```bash
 pip install wagtail-qrcode
@@ -170,14 +185,6 @@ Render a QR code in a page template:
 Unsaved pages produce no output. In Python, use
 `WagtailQrCode(page).render("svg")` or `.render("eps")` from
 `wagtail_qrcode.cls`; both return bytes.
-
-## Upgrading from stored QR assets
-
-Run package migrations and create host migrations to remove the old mixin
-fields. Existing QR documents, counters and revisions are not converted.
-The `collection_name` and `svg_has_doc_type_declaration` options are removed.
-
-See [platform upgrade notes](docs/platform-upgrade.md) for framework requirements.
 
 ## Try it locally
 
