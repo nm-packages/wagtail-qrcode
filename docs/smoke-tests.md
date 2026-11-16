@@ -66,7 +66,7 @@ the body is **Please find your QR code attached as an EPS file.**
 - Each request captures one message with those values and `qr-code-PAGE_ID.eps`.
   Extracted EPS matches a fresh download apart from `%%CreationDate:`.
   No external email or Document is created; saving a draft does not publish it.
-- Restart with the [email environment overrides](sandbox.md#configuration-and-another-device)
+- Restart with the [email environment overrides](sandbox.md#change-settings)
   and reopen the editor to check new defaults.
 
 Clear the recipient before unrelated saves.
@@ -97,7 +97,7 @@ Restart with `WAGTAIL_QR_CODE='{"scale": 4}' just sandbox-run`.
 
 ## 8. Device testing and reset
 
-Optionally follow the [LAN/tunnel setup](sandbox.md#configuration-and-another-device)
+Optionally follow the [LAN/tunnel setup](sandbox.md#scan-from-a-phone)
 and scan a new code from a phone. It reaches the page and adds a scan.
 
 To discard manual data, stop the server, back up `sandbox/.data/` if needed,
