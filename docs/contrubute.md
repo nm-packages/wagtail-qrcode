@@ -1,18 +1,95 @@
 # Contributing
 
+## Setup
+
+Install [uv](https://docs.astral.sh/uv/getting-started/installation/) 0.12.10+
+and [Just](https://just.systems/man/en/packages.html) 1.59.0+.
+On macOS, install Just with `brew install just`. Recipes need a POSIX `sh`;
+on Windows, use Git for Windows with `sh` on `PATH`.
+
+```bash
+git clone --branch main https://github.com/nm-packages/wagtail-qrcode
+cd wagtail-qrcode
+just sync
+```
+
+This installs the editable package and locked contributor tools in `.venv`.
+No activation is needed. To choose Python, use
+`uv sync --locked --python 3.11` or another supported version.
+
+The `dev` dependency group replaces the old `development` and `testing` extras.
+The justfile replaces the Makefile. Recipes run from the repository root,
+including when called from subdirectories.
+
+## Commands
+
+Run `just` to list recipes.
+
+| Command | Purpose |
+| --- | --- |
+| `just sync` | Install locked dependencies |
+| `just sandbox-setup` | Apply migrations and create missing examples |
+| `just sandbox-run` | Serve the persistent sandbox on port 8000 |
+| `just sandbox-email` | Read captured email and extract its EPS |
+| `just sandbox-test` | Run isolated sandbox tests |
+| `just test` | Run package tests with branch coverage |
+| `just format` | Apply Ruff fixes and format Python, Markdown code blocks and the justfile |
+| `just lint` | Check lint and formatting without edits |
+
+See the [sandbox guide](sandbox.md) for login, settings and reset, and
+[smoke tests](smoke-tests.md) for manual checks. The root `manage.py` and
+`just migrate`, `just admin`, `just run` serve the older test fixture site.
+
+## Checks
+
+Run `just test` for package changes and `just lint` before submitting.
+Use explicit test labels to keep package and sandbox discovery separate:
+
+```bash
+uv run --locked python manage.py test tests.test_cls
+uv run --locked python manage.py test tests
+uv run --locked python sandbox/manage.py test home
+uv run --locked pre-commit run --all-files
+```
+
+Install hooks with `uv run --locked pre-commit install`.
+Pre-commit checks Markdown prose as well as Python. Ruff formats Python and
+Markdown Python blocks; PyMarkdown checks Markdown. Invalid Python blocks may
+be skipped by Ruff, so review examples too.
+
+Formatting targets Python 3.11 and 88 columns. Ruff enables E, W, F, C90 and I,
+with a 120-column lint limit and complexity limit of 10. Formatter-conflicting
+E111, E114, E117 and W191 are disabled. `docs/` is excluded from linting,
+but its Python blocks are formatted.
+
+Run compatibility tests with `uv run --locked tox`, or
+`uv run --locked tox -f sqlite` without database services. The default selection
+is 28 SQLite environments plus three each for PostgreSQL and MySQL.
+See the [matrix guide](platform-upgrade.md#databases-and-validation) for database
+settings and all 84 combinations. Missing interpreters are skipped; check results.
+To select a test, use `uv run --locked tox -e <environment> -- tests.test_cls`.
+
+## Dependencies and packaging
+
+Use `uv add <package>` for runtime dependencies, `uv add --dev <tool>` for tools,
+and `uv remove` with the same group choice to remove them.
+Commit `pyproject.toml` and `uv.lock` together.
+
+```bash
+uv lock --upgrade-package coverage
+uv sync --locked
+uv lock --check
+```
+
+Use `uv lock --upgrade` only to refresh all locked versions deliberately.
+Keep Ruff's dependency pin, `required-version` and pre-commit revision aligned.
+Tox resolves framework versions independently of the contributor lock.
+
+Build with `uv build`. `MANIFEST.in` includes package templates and static assets.
+
 ## Branches and pull requests
 
-`main` is the default branch and the integration branch for ongoing work.
-Create working branches from an up-to-date `main` and target pull requests
-at `main`. This applies to features, bug fixes, documentation, maintenance,
-and release preparation.
-
-The former `release` branch is retired from active development.
-Prepare releases through pull requests into `main`, then create release tags
-from the reviewed commits on `main`. Use the existing tag format, such as
-`2.1.1`.
-
-For an existing checkout, start new work with:
+Branch from an up-to-date `main` and target PRs at `main`:
 
 ```bash
 git fetch origin
@@ -21,182 +98,17 @@ git pull --ff-only origin main
 git switch -c improve-qr-code-preview
 ```
 
-Choose a branch name that describes the change. Confirm the pull request's base
-branch is `main` before submitting it.
+Use a short, descriptive commit subject. Follow the
+[PR template](../.github/pull_request_template.md); remove sections that do not
+apply. Include screenshots for admin changes and upgrade notes for support changes.
 
-Use the [pull request template](../.github/pull_request_template.md) to explain
-the problem, resulting behavior, and validation commands with their results.
-Remove sections that do not apply. Include compatibility or upgrade notes when
-support changes, and before/after screenshots for admin interface changes.
+Keep the title, description and validation results aligned with the full diff
+after each push. Link CI results to their commit so earlier passes cannot be
+mistaken for current checks.
 
-Keep the PR title and description aligned with the complete final diff. When
-adding work to an existing PR, update its description and validation results as
-part of the same push. Identify the commit or revision for linked CI results so
-earlier passing checks are not mistaken for validation of the latest changes.
+Add notable changes under `Unreleased` in [CHANGELOG.md](../CHANGELOG.md),
+including any action users need to take. Trivial edits need no entry; explain
+that in the PR. Add release versions and dates only during release preparation.
 
-Add an entry under `Unreleased` in [CHANGELOG.md](../CHANGELOG.md) for notable
-features, fixes, compatibility changes, and contributor workflow changes.
-Describe the outcome and any required action, using the existing style. Keep
-entries current as the PR grows. Trivial edits need no entry; explain in the PR
-when a changelog update is unnecessary. Release versions and dates are added
-during release preparation.
-
-## Development setup
-
-### First clone this repo to your computer
-
-```bash
-git clone --branch main https://github.com/nm-packages/wagtail-qrcode
-```
-
-## Install uv and Just, then sync dependencies
-
-Install [uv](https://docs.astral.sh/uv/getting-started/installation/) 0.12.10 or
-newer and [Just](https://just.systems/man/en/) 1.59.0 or newer.
-On macOS with Homebrew:
-
-```bash
-brew install just
-just --version
-```
-
-See the [Just installation instructions](https://just.systems/man/en/packages.html)
-for other systems. Just is installed separately from the Python dependencies;
-CI uses Just 1.59.0. Recipes require a POSIX-compatible `sh` (on Windows, use
-Git for Windows with `sh` on `PATH`).
-
-Then install the locked contributor dependencies:
-
-```bash
-just sync
-```
-
-This creates `.venv` and installs the package in editable mode, together with
-Ruff, coverage, pre-commit, tox and its plugins from `uv.lock`. No activation is
-needed: Just recipes use `uv run --locked`. To choose an interpreter explicitly,
-use `uv sync --locked --python 3.11` (or another supported Python version).
-
-The former `development` and `testing` extras are replaced by the `dev`
-dependency group. Existing contributors should switch to the commands above.
-Normal installation of the published package with pip remains supported.
-
-Run `just` or `just list` to see available recipes. The root `justfile` replaces
-the Makefile: use `just <recipe>` with the same command names. Recipes run from
-the repository root, including when invoked from a subdirectory. Keep environment
-overrides before the command, for example
-`SANDBOX_BASE_URL=http://192.168.1.10:8000 just sandbox-run`.
-
-### Updating dependencies
-
-Use `uv add <package>` for runtime dependencies and `uv add --dev <tool>` for
-contributor tools; use `uv remove` (with `--dev` for tools) to remove them.
-Commit `pyproject.toml` and `uv.lock` together. For a targeted version refresh:
-
-```bash
-uv lock --upgrade-package coverage
-uv sync --locked
-uv lock --check
-```
-
-Use `uv lock --upgrade` only for an intentional refresh of all locked versions.
-Ruff's dependency pin, `required-version`, and pre-commit revision must still
-agree. Run the checks below after dependency changes.
-
-The lock captures the contributor environment across supported Python versions.
-Tox uses the locked tooling but resolves each environment's framework constraints
-independently through tox-uv, so the development lock cannot collapse the matrix
-to one Django/Wagtail pair. Database drivers remain specific to tox environments.
-
-Build distributions with `uv build`; setuptools includes the package's admin
-templates via `MANIFEST.in`.
-
-## Run the persistent sandbox
-
-```bash
-just sandbox-setup
-just sandbox-run
-```
-
-Open <http://localhost:8000/> or <http://localhost:8000/admin/> and log in with
-`admin` / `admin`. Setup is repeatable and preserves edits and existing passwords.
-The [sandbox guide](sandbox.md) explains local configuration, captured email,
-optional device testing and the explicit `just sandbox-reset` operation.
-Use the [developer smoke tests](smoke-tests.md) to verify the manual workflows.
-
-The root `manage.py`, `just migrate`, `just admin` and `just run` remain available
-for the older automated test fixture site. Use the `sandbox-` recipes for manual
-testing so content, counts and captured email persist separately from the test suite;
-QR previews and downloads are generated in memory.
-
-## Other commands
-
-- `just test`: run package tests in `tests/` with coverage.
-- `just sandbox-test`: run sandbox integration tests with isolated database/media.
-- `just sandbox-email`: print the latest captured email and extract its EPS.
-- `just format`: apply Ruff fixes and format Python and Markdown code blocks, then format the justfile.
-- `just lint`: check lint and Python/Markdown/justfile formatting without changing files.
-
-When invoking the root test runner directly, use
-`uv run --locked python manage.py test tests` to keep discovery within the package
-suite. Sandbox tests use `uv run --locked python sandbox/manage.py test home`.
-Tox defaults to package tests; pass a specific label with
-`uv run --locked tox -e <environment> -- tests.test_cls`.
-
-## Formatting and linting
-
-Run `uv sync --locked` to install the locked contributor tools.
-Run `just format` before committing and `just lint` to run the same checks as CI.
-Run `uv run --locked pre-commit install` to enable hooks and
-`uv run --locked pre-commit run --all-files` to check all tracked files, including Markdown prose.
-Ruff lint fixes run before formatting; PyMarkdown remains the Markdown checker.
-`just format` also formats the justfile; `just lint` checks it with
-`just --fmt --check`, including in CI.
-
-Ruff replaces Black, isort, Flake8 and blacken-docs. The development dependency,
-`required-version` and pre-commit hook revision must be updated together. CI
-uses `uv sync --locked` to install the same tools and reject a stale lockfile.
-
-The formatter targets Python 3.11 and 88 columns. Linting enables Ruff's stable
-`E`/`W` (pycodestyle), `F` (Pyflakes), `C90` (McCabe), and `I` (import sorting)
-rules, with a 120-column lint limit and maximum complexity of 10. `tests` and
-`wagtail_qrcode` are explicitly first-party imports. Existing build, environment,
-and legacy directory exclusions are retained; `docs/` is excluded from linting
-but its Python code blocks are formatted.
-
-Rule coverage is close rather than identical to Flake8: Ruff leaves some
-whitespace checks to the formatter, and preview-only rules are not enabled.
-The formatter-conflicting `E111`, `E114`, `E117`, and `W191` are disabled.
-The former `D203` ignore was inactive without a docstring plugin, and Ruff does
-not implement `W503`. Ruff's `E501` also exempts some long URLs and single words.
-Import ordering and formatting can differ slightly from isort and Black.
-See the [Ruff formatter documentation](https://docs.astral.sh/ruff/formatter/)
-and [compatibility notes](https://docs.astral.sh/ruff/faq/).
-
-Ruff 0.17.5 formats Python fenced code blocks in Markdown without preview mode;
-the formatter hook explicitly includes Markdown. Invalid Python blocks are
-skipped, so examples still need review. Markdown prose and shell blocks remain
-under PyMarkdown's existing checks.
-
-## Testing
-
-Follow the [platform support policy](../AGENTS.md#platform-support-policy):
-support all stable Python releases that have not reached end of life, and
-Django and Wagtail releases from the preceding LTS through the latest stable
-release. Test only mutually compatible combinations. See the
-[current matrix and upgrade notes](platform-upgrade.md).
-
-The app uses django tests and has `tox` setup for running them against the compatible Wagtail and Django versions.
-
-Run:
-
-```bash
-uv run --locked tox
-```
-
-The default selection matches CI: all 28 SQLite combinations and three
-representative combinations each for PostgreSQL and MySQL, for 34 environments
-in total. Server database tests require running services and their connection
-settings. Use `uv run --locked tox -f sqlite` for SQLite only, or `uv run --locked tox -f postgres` / `uv run --locked tox -f mysql`
-for the three representative server database environments. See the
-[matrix guide](platform-upgrade.md#databases-and-validation) for explicit
-selections covering all 84 supported combinations.
+Prepare releases through PRs into `main`, then tag reviewed commits there using
+the existing format, such as `2.1.1`. The former `release` branch is retired.

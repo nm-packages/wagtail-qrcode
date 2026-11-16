@@ -1,138 +1,88 @@
 # Local QR code sandbox
 
-The Wagtail project in `sandbox/` is a persistent manual testing site for this
-checkout. Its examples use the same in-memory QR renderer as the package: setup,
-page saves, previews and downloads create no QR files or Documents.
-
-This is a development site with a known password, intended for your own machine.
-It runs with the locked contributor dependencies installed by `just sync`.
-The package's framework compatibility matrix is tested separately with tox.
-
-## Install, set up and start
-
-Install Python 3.11 or newer, uv 0.12.10 or newer and Just 1.59.0 or newer
-(see [contributor setup](contrubute.md#install-uv-and-just-then-sync-dependencies)).
-From the repository root:
+The project in `sandbox/` is a persistent manual testing site.
+Follow the [contributor setup](contrubute.md#setup), then run:
 
 ```bash
-just sync
 just sandbox-setup
 just sandbox-run
 ```
 
-Open <http://localhost:8000/> and <http://localhost:8000/admin/>.
-The initial local login is **admin / admin**. Setup applies migrations, configures
-the Wagtail Site for localhost on port 8000, and creates:
+Open <http://localhost:8000/> or <http://localhost:8000/admin/>.
+The initial login is **admin / admin**, for local development only.
 
-- **Published QR example — scan and download**: listed on the homepage, with a
-  generated SVG preview and authenticated SVG/EPS downloads in its editor.
-- **Draft QR example — save and preview**: available in admin and Preview, with
-  authenticated downloads; its public page and scan URL return 404 until published.
+Setup applies migrations, configures the Wagtail Site, and creates a published
+QR example and a draft. The homepage lists the published example; the draft is
+available in admin and Preview, with a public page and scan URL returning 404.
 
-`uv sync` installs the checkout in editable mode. The server reloads Python
-changes; restart after changing settings and run setup after adding migrations.
+Setup preserves existing passwords, edited pages, revisions and counts.
+It recreates missing examples without overwriting pages with the same slug.
+Copies and aliases keep their own IDs and do not duplicate setup markers.
 
-The sandbox uses Django's development server through `sandbox/manage.py`, with
-no standalone WSGI entrypoint. It includes the Wagtail admin and QR examples;
-public search, Documents, Django admin, form builder, URL-history redirects,
-embeds and snippets are omitted. QR scan redirects continue to use the package's
-page-ID endpoint, including after a page's slug changes.
-`wagtail.search` remains installed for Wagtail's built-in admin search.
+The server reloads Python changes. Restart after settings changes and run setup
+after adding migrations. Use the [smoke tests](smoke-tests.md) to check workflows.
 
-Repeat `just sandbox-setup` whenever necessary. It preserves existing users,
-passwords, titles, slugs, revisions and scan counts. Missing examples are
-recreated without overwriting other pages with the same slug. Copies and aliases
-have their own page-ID codes and do not duplicate the setup identity markers.
-Setup updates the Site's hostname and port to match the configured base URL.
+## Data and tests
 
-No QR asset regeneration is necessary after changing settings. The next preview,
-download or email uses the current configuration. Previous downloads and printed
-copies retain their original payload.
+Data lives in Git-ignored `sandbox/.data/`: the SQLite database, media, static
+output, captured email and extracted attachments. Server restarts preserve it.
 
-Follow the [developer smoke tests](smoke-tests.md) to check the editor, downloads,
-redirects, counters, draft isolation, autosave, copies, aliases and email.
-
-## Data and automated tests
-
-The sandbox stores its SQLite database, uploaded media, static output, captured
-emails and explicitly extracted attachments inside `sandbox/.data/`, ignored by
-Git. Restarting the server preserves this directory. No generated QR files are
-stored there by previews or downloads. A page-owned counter row is created only
-on its first successful scan redirect.
+QR previews and downloads are generated in memory. No QR Documents or server
+assets are created. The first successful scan creates a counter record.
 
 ```bash
 just test
 just sandbox-test
 ```
 
-Package tests use the root project's settings. Sandbox tests use their own
-settings, a temporary test database and temporary media, preserving the manual
-site. Equivalent direct commands are:
+Package tests use the root settings; sandbox tests use a temporary database and
+media. Both preserve manual sandbox data. See [test commands](contrubute.md#checks)
+for direct invocation with explicit discovery labels.
 
-```bash
-uv run --locked python manage.py test tests
-uv run --locked python sandbox/manage.py test home
-```
+The sandbox uses Django's development server, Wagtail admin and QR pages.
+It omits Documents, public search, Django admin, forms, redirects, embeds and
+snippets; `wagtail.search` remains for admin search. QR scan redirects still work.
+There is no standalone WSGI entrypoint or `local.py` override.
 
-Use the explicit labels to keep each suite's discovery separate. The root
-`manage.py`, `just migrate`, `just admin` and `just run` belong to the older test
-fixture site; use `sandbox-` recipes for this persistent environment.
+## Email capture
 
-Sandbox migrations create the current page models directly, without historical
-QR asset fields or document-library dependencies. Use `just sandbox-reset` to
-recreate development data if an older sandbox's schema is out of date.
-
-## Local email and attachments
-
-The file backend writes messages to `sandbox/.data/emails/*.log`, without external
-delivery. Enter recipient `reader@example.test`, subject and body in the QR tab,
-then choose **Save draft** or **Publish**. The EPS is generated in memory and
-included in the captured MIME message; it is not registered as a Document.
-Autosave sends no message.
+Enter a recipient such as `reader@example.test`, review the subject and body,
+then choose **Save draft** or **Publish**. Messages go to
+`sandbox/.data/emails/*.log`, without external delivery. Autosave sends nothing.
 
 ```bash
 just sandbox-email
 ```
 
-This prints the latest message and explicitly extracts its EPS attachment to
-`sandbox/.data/attachments/`. This inspection command is the only sandbox QR
-workflow that deliberately writes a standalone EPS. Preview/download responses
-remain transient; a browser download is saved wherever you choose.
+This prints the latest message and extracts its EPS to
+`sandbox/.data/attachments/`. Extraction deliberately writes a file; ordinary
+previews and downloads do not store server assets.
 
-Compare the QR geometry or scan destination when inspecting a new download and
-an attachment. PyQRCode adds an export timestamp to EPS, so files generated at
-different times can differ at `%%CreationDate:`. SVG is the easier format to open
-in Pixelmator Pro; EPS requires a viewer that supports standard PostScript EPS.
-Both contain vector artwork.
+EPS exports include a `%%CreationDate:` timestamp, so compare geometry or scan
+destinations rather than exact bytes. Use an SVG viewer for SVG and a
+PostScript-capable viewer for EPS; Pixelmator Pro may reject EPS.
 
 ## Configuration and another device
 
-No tunnel is required for localhost. Configure the sandbox with environment
-variables; it does not load a `local.py` settings file.
-
-For a phone on the same LAN, use this computer's LAN address
-and allow access to port 8000. Use the same origin for both commands:
+Use environment variables; the sandbox does not load `local.py`.
+For a phone on the same LAN, allow port 8000 and use your computer's LAN address:
 
 ```bash
 SANDBOX_BASE_URL=http://192.168.1.10:8000 just sandbox-setup
 SANDBOX_BASE_URL=http://192.168.1.10:8000 just sandbox-run
 ```
 
-The origin aligns the QR URL, allowed hosts, CSRF origin and admin base URL;
-setup aligns the Wagtail Site hostname and port. It must be an HTTP(S) origin
-without a path, query or fragment. An existing tunnel's public origin can be used
-instead. The server listens on `0.0.0.0:8000`.
+Use the same origin for setup and startup. It sets the Site hostname/port,
+allowed hosts, CSRF origin, QR base URL and admin base URL.
+Supply an HTTP(S) origin without a path, query or fragment; a tunnel origin
+also works. The server listens on `0.0.0.0:8000`.
 
-After an origin change, run setup and restart with the same setting, then simply
-reopen the preview or download a new code. No save or publish action is needed.
-The payload is `ORIGIN/qr-code/?id=PAGE_ID`. A phone cannot reach this Mac using
-`localhost`; open the configured homepage on the phone before testing its scan.
-Printed codes require the encoded domain and route to stay reachable.
+Open the homepage on the phone before scanning. `localhost` points to the phone,
+not your computer. After changing origin, rerun setup, restart and download a new
+code; no page save is needed. Printed codes retain the old origin.
+Unset `SANDBOX_BASE_URL`, rerun setup and restart to return to localhost.
 
-To return to localhost, unset `SANDBOX_BASE_URL`, run setup and restart.
-Newly generated outputs use localhost again.
-
-Email defaults and QR rendering options can also be set when starting the server:
+Override email and rendering defaults when starting the server:
 
 ```bash
 WAGTAIL_QRCODE_EMAIL_SUBJECT='Sandbox QR code' \
@@ -140,21 +90,21 @@ WAGTAIL_QRCODE_EMAIL_BODY='Here is your QR code.' \
 WAGTAIL_QR_CODE='{"scale": 4}' just sandbox-run
 ```
 
-`WAGTAIL_QR_CODE` takes a JSON object. Omitted options use the package defaults.
+`WAGTAIL_QR_CODE` takes a JSON object; omitted options use
+[package defaults](../README.md#configuration).
 
-## Explicit reset
+## Reset
 
-Stop the sandbox server before running:
+Stop the server and back up `sandbox/.data/` if you need to keep anything:
 
 ```bash
 just sandbox-reset
 ```
 
-This deletes **all** sandbox database content, uploaded media, captured messages
-and extracted attachments under `sandbox/.data/`, then restores the examples and
-initial login. Back up that directory first to retain manual edits. Reset
-preserves the root database and files outside `sandbox/.data/`. A symlinked data
-directory is refused.
+This deletes all sandbox data and restores the examples and initial login.
+Files outside `sandbox/.data/`, including the root database, are preserved.
+Symlinked data directories are refused. Use reset if an older sandbox's schema
+predates the current migrations.
 
-To remove data without reseeding, use
+To delete without reseeding, run
 `uv run --locked python sandbox/reset.py --yes`. Ordinary setup never resets data.

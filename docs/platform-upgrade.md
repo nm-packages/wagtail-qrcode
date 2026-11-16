@@ -1,40 +1,20 @@
-# Platform compatibility and upgrade notes
+# Platform compatibility
 
-## Rolling support policy
+## Support policy
 
-Follow the [repository support policy](../AGENTS.md#platform-support-policy)
-when refreshing the platform:
+We support stable Python releases until upstream end of life, including
+security-only releases. For Django and Wagtail, we support the latest stable
+release back through the preceding LTS. If the latest release is an LTS,
+we retain the previous LTS too.
 
-- Support every stable Python release that has not reached upstream end of life,
-  including releases receiving security fixes only. Exclude prereleases.
-- For Django and Wagtail independently, support the latest stable release and
-  every intervening feature release back through the preceding LTS, inclusive.
-  When the latest stable release is itself an LTS, retain the previous LTS too.
-- Select only combinations supported by Python and both frameworks. A Python
-  release need not work with every framework release to remain supported.
-- Apply this policy during upgrades, including removing versions outside the
-  window. Explicit user targets override the default policy. Align metadata,
-  dependency minimums, tox, CI, formatter targets and contributor guidance.
-
-As of November 2026, this means:
-
-| Component | Before this upgrade | After this upgrade |
-| --- | --- | --- |
-| Python | 3.9–3.13 | 3.11–3.15 |
-| Django | 4.2, 5.0, 5.1 | 5.2 LTS, 6.0, 6.1 |
-| Wagtail | 5.2, 6.0–6.3 | 7.4 LTS, 8.0, 8.1 |
-
-Python 3.9 and 3.10 are EOL. Django 5.2 and Wagtail 7.4 are the LTS
-boundaries preceding the current stable releases. These are rolling boundaries,
-not permanent minimum versions: verify upstream releases and lifecycle dates
-again on the next upgrade.
+Use mutually compatible combinations. Support refreshes remove versions outside
+this window and align requirements, classifiers, tox, CI, tooling and docs.
+See [repository policy](../AGENTS.md#platform-support-policy).
 
 ## Compatible combinations
 
-The supported combinations below can be used with SQLite, PostgreSQL and MySQL:
-28 combinations per backend, 84 in total. By default, tox and CI run all 28
-SQLite combinations and three representative combinations for each server
-database, as described under [databases and validation](#databases-and-validation).
+The November 2026 matrix supports Python 3.11–3.15, Django 5.2–6.1 and
+Wagtail 7.4–8.1:
 
 | Wagtail | Django | Python |
 | --- | --- | --- |
@@ -46,61 +26,39 @@ database, as described under [databases and validation](#databases-and-validatio
 | 8.1 | 6.0 | 3.12–3.14 |
 | 8.1 | 6.1 | 3.12–3.15 |
 
-Use the latest patch release of each series. Python 3.14 requires Django 5.2.8+
-when using Django 5.2, and Python 3.15 requires Django 6.1.3+. The tox factors
-use those patch minimums for the whole corresponding Django series.
+Use the latest patches. Python 3.14 needs Django 5.2.8+ on the 5.2 series;
+Python 3.15 needs Django 6.1.3+. Tox applies these minimums to each series.
 
-Evidence for the current selection:
+Recheck upstream sources when upgrading:
 
-- [Python release lifecycles](https://devguide.python.org/versions/).
-- [Django releases and LTS support](https://www.djangoproject.com/download/#supported-versions)
-  and [Python compatibility](https://docs.djangoproject.com/en/6.1/faq/install/#what-python-version-can-i-use-with-django).
-- [Wagtail release schedule and LTS support](https://github.com/wagtail/wagtail/wiki/Release-schedule)
-  and [Django/Python compatibility](https://docs.wagtail.org/en/stable/releases/upgrading.html#compatible-django-python-versions).
+- [Python lifecycles](https://devguide.python.org/versions/)
+- [Django support](https://www.djangoproject.com/download/#supported-versions)
+  and [Python compatibility](https://docs.djangoproject.com/en/6.1/faq/install/#what-python-version-can-i-use-with-django)
+- [Wagtail support](https://github.com/wagtail/wagtail/wiki/Release-schedule)
+  and [Django/Python compatibility](https://docs.wagtail.org/en/stable/releases/upgrading.html#compatible-django-python-versions)
 
-## Upgrade considerations
+## Upgrading
 
-Installations below Python 3.11, Django 5.2 or Wagtail 7.4 must upgrade before
-using this package revision. Wagtail supplies the Django dependency; the package
-requires Wagtail 7.4+ and Python 3.11+. The compatibility table still determines
-which framework combinations to use.
+Upgrade installations below Python 3.11, Django 5.2 or Wagtail 7.4 before using
+this revision. Django is supplied through the Wagtail dependency.
+Follow intermediate framework upgrade notes for host models and content;
+tests on fresh databases do not verify an existing site's migration.
 
-The local exercise started with Python 3.13 / Django 5.1 / Wagtail 6.3.
-It checked Wagtail 6.4 and 7.0 on Django 5.1, switched to Django 5.2 on Wagtail
-7.0, then checked each Wagtail release through 7.4. From there it checked Django
-6.0, Wagtail 8.0, Django 6.1, Python 3.14, Wagtail 8.1 and Python 3.15 in that
-order, keeping each transition compatible. Intermediate versions are diagnostic
-steps; they are not part of the final support matrix.
+The package uses standard `wagtail.models.Page`. Wagtail 8 custom base page
+models require separate adaptation of the redirect view and counter relation.
 
-Each check uses a separate environment and a fresh test database. This is not an
-in-place migration of an existing site. Host sites must also follow each
-intermediate framework release's upgrade notes for their models, content and
-customizations.
-
-At the time of the platform upgrade, no required changes were found to the
-package's publishing hooks or field panel APIs. The subsequent QR ownership
-redesign replaces document fields with a read-only preview and SVG/EPS downloads;
-rendering tests cover those controls, the usage count and recipient field. The
-example site and sandbox email capture use Django 6.1's `MAILERS` setting on that
-release and retain `EMAIL_BACKEND` for Django 5.2 and 6.0. Host sites should follow
-[Django's email migration guidance](https://docs.djangoproject.com/en/6.1/topics/email/#migrating-email-to-mailers).
-
-Wagtail 8's optional custom base page models require separate adaptation of the
-redirect view, which currently queries `wagtail.models.Page`. This exercise
-covers sites using the standard base page model. New optional CMS features are
-outside this upgrade's scope. The example site's API v2 remains supported in
-Wagtail 8.1; its announced deprecation begins in Wagtail 8.2.
+Django 6.1 uses `MAILERS` in the test site and sandbox; older versions use
+`EMAIL_BACKEND`. See [Django's email migration guide](https://docs.djangoproject.com/en/6.1/topics/email/#migrating-email-to-mailers).
+For the QR storage changes, see [host migration notes](../README.md#upgrading-from-stored-qr-assets).
 
 ## Databases and validation
 
-CI uses PostgreSQL 16 and MySQL 8.4. Django 6.1 requires PostgreSQL 15+ or
-MySQL 8.4+, SQLite 3.37+, and psycopg2 2.9.9+ or mysqlclient 2.2.1+ for the
-selected drivers. See the [Django database requirements](https://docs.djangoproject.com/en/6.1/ref/databases/).
-These CI servers also support the retained Django releases.
+Each of the 28 framework/interpreter combinations supports SQLite, PostgreSQL
+and MySQL: 84 combinations in total.
 
-CI runs seven jobs: five Python jobs covering all 28 SQLite environments, one
-PostgreSQL job and one MySQL job. Each server database job uses Python 3.14 and
-runs the full test suite on these three Django/Wagtail pairs:
+CI runs eight jobs: lint/sandbox checks, five SQLite Python jobs, PostgreSQL and
+MySQL. Tox's default selection contains 34 environments: all 28 SQLite
+combinations and these three pairs on Python 3.14 for each server database:
 
 | Django | Wagtail |
 | --- | --- |
@@ -108,21 +66,13 @@ runs the full test suite on these three Django/Wagtail pairs:
 | 6.0 | 8.0 |
 | 6.1 | 8.1 |
 
-This selects 34 environments per workflow run, covering every supported Django
-and Wagtail release on both server databases. Python/driver combinations outside
-this selection are not covered by CI. Plain `uv run --locked tox` uses the same 34 environments;
-CI selects from this list by Python version and database. All 84 supported
-combinations remain available through explicit `tox -e` selections for release
-checks and database-specific investigations.
+CI uses PostgreSQL 16 and MySQL 8.4. Django 6.1 requires PostgreSQL 15+,
+MySQL 8.4+ or SQLite 3.37+, with psycopg2 2.9.9+ or mysqlclient 2.2.1+
+for those drivers. See [database requirements](https://docs.djangoproject.com/en/6.1/ref/databases/).
 
-Tox sets `DATABASE` from its database factor and forwards `DB_*` connection
-settings. Coverage files are isolated per environment. Start database services
-before invoking the PostgreSQL or MySQL environments.
-
-The test site enables `django.contrib.postgres` when PostgreSQL is selected,
-so Django can validate Wagtail's PostgreSQL search fields and indexes. QR tests
-verify in-memory exports and page-owned counter deletion without assuming that
-database sequences reset between tests.
+Start server databases before running their environments. Tox sets `DATABASE`
+from the factor and forwards `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`
+and `DB_PORT`. Coverage files are separate per environment.
 
 ```bash
 uv run --locked tox list
@@ -131,10 +81,9 @@ uv run --locked tox -f postgres
 uv run --locked tox -f mysql
 uv run --locked tox -e py311-dj52-wt74-sqlite
 uv run --locked tox -e py315-dj61-wt81-sqlite
-uv run --locked tox -e py315-dj61-wt81-postgres,py315-dj61-wt81-mysql
 ```
 
-To run all 84 supported combinations explicitly:
+To select all 84 combinations:
 
 ```bash
 uv run --locked tox -e 'py{311,312,313,314}-dj52-wt{74,80,81}-{sqlite,postgres,mysql}'
@@ -143,29 +92,7 @@ uv run --locked tox -e 'py{312,313,314}-dj61-wt{80,81}-{sqlite,postgres,mysql}'
 uv run --locked tox -e 'py315-dj61-wt81-{sqlite,postgres,mysql}'
 ```
 
-Tox skips missing interpreters by default. Inspect summaries and installed
-versions before treating a run as evidence for a combination. Black's syntax
-target is Python 3.11; formatter and linter pins are unchanged.
-
-Local validation on 11 November 2026:
-
-- `tox -f sqlite`: all 28 environments passed, 27 tests each, with no skipped
-  interpreters. The installed Python versions were 3.11.14, 3.12.12, 3.13.18,
-  3.14.10 and 3.15.2; Django versions were 5.2.19, 6.0.10 and 6.1.3; Wagtail
-  versions were 7.4.4, 8.0.1 and 8.1, in the combinations above.
-- `make test` on Python 3.15.2 / Django 6.1.3 / Wagtail 8.1 passed all
-  27 tests, with 81% package branch coverage.
-- `python manage.py check` and `python manage.py makemigrations --check --dry-run`
-  passed on the lowest and highest combinations. No model changes were detected.
-  The existing `staticfiles.W004` warning remains because `tests/static` is absent.
-- Pre-commit hooks passed for changed files. All five changed skills passed
-  `quick_validate.py`; local documentation links and CI/tox selection were checked.
-- Source and wheel distributions built and passed `twine check`. The wheel
-  installed into a separate Python 3.15.2 environment with Django 6.1.3 and
-  Wagtail 8.1; `pip check`, metadata and bundled template checks passed.
-  Setuptools reports existing license metadata deprecations during the build.
-- PostgreSQL and MySQL integration runs were not performed: neither database
-  service nor the Docker daemon was running locally. Their 56 matrix entries
-  were unverified in this initial local run; SQLite results do not establish
-  database backend coverage. See [PR #65's checks](https://github.com/nm-packages/wagtail-qrcode/pull/65/checks)
-  for subsequent database validation of each revision.
+Missing interpreters are skipped. Check installed versions and environment
+summaries before claiming matrix coverage. The original 11 November 2026 local
+validation covered SQLite only; see [PR #65's checks](https://github.com/nm-packages/wagtail-qrcode/pull/65/checks)
+for subsequent results by revision.

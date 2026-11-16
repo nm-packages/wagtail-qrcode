@@ -2,36 +2,19 @@
 
 ## Unreleased
 
-- Simplify the contributor sandbox by removing unused generated files and optional apps, including Documents. Use `just sandbox-run` through Django's development server and environment variables for configuration; the standalone WSGI entrypoint, Django admin route and `local.py` overrides are removed. Sandbox migrations now create the current QR page model directly; recreate outdated development databases with `just sandbox-reset`.
-
-- Preserve custom email subject and body field initials when applying message defaults, including disabled fields, empty strings and callables. Constructor `initial=` values retain precedence; custom forms no longer send substituted default text.
-
-- Replace the Makefile with a documented justfile. Install Just 1.59.0 or newer and use `just <recipe>` with the existing command names; `just` lists available commands. CI uses pinned Just, and `just format` / `just lint` also format or check the justfile.
-
-- Prefill editable email subject and body fields, configurable with `WAGTAIL_QRCODE_EMAIL_SUBJECT` and `WAGTAIL_QRCODE_EMAIL_BODY`. The sender uses the same defaults when message content is omitted; recipients remain blank and messages are not stored with pages. No migration is required.
-
-- Add a **Reset scan count** button to the admin QR panel for page editors. Confirming resets only that page's counter immediately, preserving unsaved edits without saving, publishing or sending email.
-
-- Add a persistent contributor sandbox with repeatable setup, published/draft examples, local email capture and isolated integration tests. Use `just sandbox-setup` and `just sandbox-run`; previews and SVG/EPS downloads are generated on demand without QR Documents. Package tests now use explicit `tests` discovery, and MailHog tooling is replaced by sandbox file capture. See the sandbox and smoke-test guides; `just sandbox-reset` explicitly discards manual sandbox data.
-
-- Adopt uv and a committed lockfile for contributor dependencies. Replace the development/testing extras with a `dev` dependency group; use `uv sync --locked` and `uv run --locked`. Just recipes and CI use the locked tools, and tox uses uv while retaining its independent framework compatibility matrix.
-
-- Replace Black, isort, Flake8 and blacken-docs with pinned Ruff checks in development, pre-commit and CI. Run `uv sync --locked`; use `just format` to apply fixes and format Python/documentation examples, and `just lint` for non-mutating checks.
-
-- Replace stored QR documents and page asset fields with on-demand SVG/EPS previews, downloads and email attachments. QR output embeds the page-ID scan URL; copies, translations and aliases each use their own ID. Downloads check page edit permission. Run migrations for the new page-owned scan counter and generate host migrations to remove the former mixin fields; legacy QR data conversion is outside this change.
-- Keep scan counts outside page revisions and increment them atomically without saving page content. Only live QR pages redirect; malformed IDs return 404. Restoring a revision does not reset counts, and deleting a page removes its counter.
-- Preserve explicit-save EPS emailing after commit without generating files on autosave or mutating saved revisions. Remove document collection configuration and the old SVG namespace option; SVG exports always include their XML namespace.
-- Use the editor form's validated recipient, subject and body for EPS emails, preserving disabled fields and custom form cleaning.
-- Expose alias-specific QR previews and SVG/EPS downloads in the page header's Actions menu, including chained aliases.
-- Adopt a rolling support policy: Python releases that have not reached end of life, and Django and Wagtail releases from the preceding LTS through the latest stable release, using compatible combinations. The supported ranges are now Python 3.11–3.15, Django 5.2–6.1 and Wagtail 7.4–8.1; upgrade older installations to the new minimums.
-- Ensure tox selects the requested database backend and forwards its connection settings; use PostgreSQL 16 and MySQL 8.4 in CI for the expanded platform matrix.
-- Reduce CI to seven jobs and align plain `tox` with its 34 test environments: keep the full SQLite matrix and test three representative Django/Wagtail pairs on Python 3.14 for each of PostgreSQL and MySQL. Use explicit `tox -e` selections for all 84 supported combinations when needed.
-- Fix database test compatibility by enabling Django's PostgreSQL application for that backend and checking generated documents without assuming primary keys restart at one.
-- Use Django 6.1's `MAILERS` configuration in the example site and MailHog setup while preserving email settings for older Django versions.
-- Add repository skills for development, code review, Wagtail integration, and Python, Django, Wagtail, and combined platform upgrades.
-- Standardize contribution and release preparation on `main`; retire `release` from active development.
-- Add a PR template and contributor guidance for keeping descriptions and validation results current and recording notable changes in the changelog.
-- Fix the Django 5.1 tox dependency selector and pin CI runners to Ubuntu 24.04 for the existing Python test matrix.
+- Generate QR previews, SVG/EPS downloads and email attachments on demand, without Documents or page asset fields. Codes follow each page's ID, including copies, translations and chained aliases. Downloads require edit permission; aliases have QR actions in the header menu.
+- Store scan counts outside revisions and increment them atomically. Only live QR pages redirect; malformed IDs return 404. Restoring revisions leaves counts alone; deleting a page removes its counter. Editors can reset counts immediately without losing unsaved input.
+- Send EPS emails after an explicit save commits, using validated form values. Autosave sends nothing. Prefill editable subject and body fields with `WAGTAIL_QRCODE_EMAIL_SUBJECT` and `WAGTAIL_QRCODE_EMAIL_BODY`; recipients start blank and messages are not stored. Custom field initials, disabled fields and cleaning are respected; constructor `initial=` takes precedence.
+- Run package migrations for the new counter table and host migrations to remove old mixin fields. Legacy documents, counters and revisions are not converted. Remove `collection_name` and `svg_has_doc_type_declaration` settings; SVG always includes its namespace.
+- Apply a rolling support policy: non-EOL Python releases and framework releases from the preceding LTS through latest stable, in compatible combinations. Current ranges are Python 3.11–3.15, Django 5.2–6.1 and Wagtail 7.4–8.1. Upgrade older installations to the new minimums.
+- Run 34 tox environments by default: all 28 SQLite combinations and three Django/Wagtail pairs on Python 3.14 for each of PostgreSQL and MySQL. All 84 combinations remain selectable. Tox forwards database settings; CI uses PostgreSQL 16 and MySQL 8.4 on Ubuntu 24.04.
+- Fix PostgreSQL test configuration and remove assumptions that database IDs restart at one. Use `MAILERS` on Django 6.1 and retain older email settings on Django 5.2 and 6.0.
+- Use uv with a committed contributor lock and a `dev` dependency group instead of development/testing extras. Tox resolves its framework matrix separately.
+- Replace Make with Just 1.59.0+ and Black/isort/Flake8/blacken-docs with pinned Ruff. Use `just sync`, `just format` and `just lint`; CI uses the same locked tools and checks justfile formatting.
+- Add a persistent sandbox with published/draft examples and local email capture, replacing MailHog. Use `just sandbox-setup` and `just sandbox-run`; package and sandbox tests have separate discovery and data.
+- Simplify the sandbox to the QR examples and Wagtail admin, without Documents, Django admin, a WSGI entrypoint or `local.py` overrides. Configure it through environment variables. Recreate outdated sandbox schemas with `just sandbox-reset`, which deletes manual sandbox data.
+- Add development, review and platform upgrade skills. Use `main` for contribution and release preparation; retire `release`. Add a PR template and require current descriptions, validation results and notable-change entries.
+- Shorten the README and contributor guides, remove repeated instructions, and align repository links and tooling notes.
 
 ## [2.1.1] - 2025-05-16
 

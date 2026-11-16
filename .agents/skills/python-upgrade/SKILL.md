@@ -29,7 +29,7 @@ drop support inside the agreed policy or materially expand the requested upgrade
 Inspect these sources together:
 
 - `pyproject.toml`: `requires-python`, Python classifiers, runtime dependencies,
-  development tools, and Black's `target-version`.
+  development tools, and Ruff's `target-version`.
 - `tox.ini`: interpreter factors, Django/Wagtail dependency factors,
   `envlist`, `gh-actions` mappings, and database combinations.
 - `.github/workflows/test.yml`: Python matrices in every database job and their
@@ -72,7 +72,7 @@ within the agreed scope.
 Keep the changes focused on interpreter compatibility:
 
 - Adding a newer interpreter alone does not require raising `requires-python`
-  or Black's syntax target. Add its classifier and matching tox and CI coverage.
+  or Ruff's syntax target. Add its classifier and matching tox and CI coverage.
 - When the rolling policy removes EOL releases, or the user explicitly changes
   the minimum, align `requires-python`,
   classifiers, tox, CI, formatter targets, and documentation, including the
