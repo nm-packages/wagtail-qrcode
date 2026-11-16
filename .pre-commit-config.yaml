@@ -8,7 +8,7 @@ repos:
       - id: ruff-format
         types_or: [python, pyi, markdown]
   - repo: https://github.com/jackdewinter/pymarkdown
-    rev: v0.9.26
+    rev: v0.9.42
     hooks:
         - id: pymarkdown
           args:
