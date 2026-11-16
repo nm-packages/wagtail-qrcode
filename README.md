@@ -1,81 +1,72 @@
 # Wagtail QR code
 
-This package can be used to create a page in Wagtail CMS that has a corresponding QR Code.
+Create QR codes that link to Wagtail pages. Codes use the page ID, so they keep
+working when a page is renamed or moved.
 
-![Alt text](docs/sample.png?raw=true "Title")
+- Preview QR codes and download SVG or EPS files.
+- Email an EPS when saving a draft or publishing.
+- Count scan redirects and reset counts in the editor.
+- Give copies, translations and aliases their own codes and counts.
 
-## Features
+QR files are generated on demand, without Wagtail Documents or stored assets.
 
-- Generate QR previews and SVG/EPS downloads on demand, without storing files or using Wagtail Documents.
-- Scan a URL containing the page ID to reach its current location, even after a title, slug or parent change.
-- Track successful scan redirects in a separate page-owned record, outside page revisions.
-- Email a generated EPS attachment on an explicit draft save or publication.
-- Give copies, translations and aliases their own QR identity based on their page ID.
+![QR code controls in Wagtail](docs/scan-count-reset.jpg)
+
+## Upgrading from v2.1.1 (read this first)
+
+Upgrading from 2.1.1 requires application changes and a planned data migration.
+Follow the [upgrade guide](docs/upgrading.md) to preserve scan counts, keep
+printed codes working and update your site's integrations before deploying.
 
 ## Installation
 
-### Compatibility
+Use one of these supported combinations:
 
-Python 3.11–3.15, Django 5.2 LTS–6.1 and Wagtail 7.4 LTS–8.1 are supported in
-compatible combinations. We support Python releases that have not reached end
-of life, and framework releases from the preceding LTS through the latest
-stable release. See the
-[tested combinations and upgrade notes](docs/platform-upgrade.md) before
-choosing versions; newer frameworks require newer Python versions.
+| Wagtail | Django | Python |
+| --- | --- | --- |
+| 7.4 LTS, 8.0, 8.1 | 5.2 LTS | 3.11–3.14 |
+| 7.4 LTS, 8.0, 8.1 | 6.0 | 3.12–3.14 |
+| 8.0 | 6.1 | 3.12–3.14 |
+| 8.1 | 6.1 | 3.12–3.15 |
 
-To add the package to your own Wagtail CMS
-
-**Install the package into your environment.**
+Use the latest patch releases. Python 3.14 requires Django 5.2.8+ on the 5.2
+series; Python 3.15 requires Django 6.1.3+.
 
 ```bash
 pip install wagtail-qrcode
 ```
 
-**Add the package to your site settings.**
+Add the app and QR base URL to your Django settings:
 
 ```python
 INSTALLED_APPS = [
     # ...
     "wagtail_qrcode",
-    # ...
 ]
-```
 
-**Create the database tables.**
-
-```bash
-python manage.py migrate
-```
-
-The package owns a scan-counter table with a one-to-one relationship to Wagtail's
-base Page. A row is created on the first successful scan; previewing, downloading
-and emailing do not create records.
-
-**Add this setting to your Wagtail settings.**
-
-It is used to generate the base url for the QR code
-
-```python
 WAGTAIL_QR_CODE_BASE_URL = "https://example.com"
 ```
 
-You'll likely want to test the QRcode using another device. Your device will need to be able to resolve your testing domain and localhost probably won't work.
-
-Try using a service like [ngrok](https://ngrok.com/) to set up a url to your localhost and use that domain name as in the `WAGTAIL_QR_CODE_BASE_URL` setting.
-
-This is the command I use to start ngrok.
-
-```bash
-./ngrok http 8000 --scheme=http
-```
-
-## Using the QRCode page model mixin
-
-Use the model mixin in a new or an existing page model.
+The base URL defaults to `WAGTAILADMIN_BASE_URL` when the QR setting is omitted.
+Add the scan route before `wagtail_urls` in your site's URL configuration:
 
 ```python
-# models.py
+from django.urls import include, path
 
+urlpatterns = [
+    # ...
+    path("qr-code/", include("wagtail_qrcode.urls")),
+    # ... Wagtail routes
+]
+```
+
+Run `python manage.py migrate` to create the scan-counter table.
+
+## Page model
+
+Add `QRCodeMixin` to a page model:
+
+```python
 from wagtail.admin.panels import (
     FieldPanel,
     MultiFieldPanel,
@@ -112,133 +103,54 @@ class QRCodePage(QRCodeMixin, Page):
     base_form_class = QrCodeEmailForm
 ```
 
-This adds a `QR Code` tab with a read-only preview, **Download SVG** and
-**Download EPS** buttons, and the scan count. Save a new page first so that it has
-an ID. No document chooser or generated asset fields are needed on the page.
-Downloads and previews require Wagtail admin access and permission to edit that
-page, including for unpublished pages.
+For an existing model, keep its content, promote and settings panels.
+Without email, use `qrcode_panels = QRCodeMixin.panels` and omit the
+`QrCodeEmailForm` import and `base_form_class`.
 
-Editors with permission to edit the page can choose **Reset scan count** beside
-the count and confirm to reset it to zero. The button is disabled at zero.
-Resetting takes effect immediately and preserves unsaved editor input; it does
-not save or publish the page or send email. It cannot be undone by restoring a
-revision. Subsequent scans start counting again from zero.
+Run `python manage.py makemigrations` and `python manage.py migrate` for your
+page model.
 
-To email an EPS, enter the recipient and review the prefilled subject and body
-before choosing **Save draft** or **Publish**. Both message fields are editable
-and must be nonempty when a recipient is provided. The recipient starts blank
-each time the editor opens; message fields are not saved with the page.
-The attachment is rendered in memory and sent after the
-save transaction commits. Autosave does not send email, and later workflow
-approval or scheduled publication does not repeat an earlier email request.
-Emails use the editor form's validated values, including disabled field values
-and custom cleaning in a `QrCodeEmailForm` subclass.
+## Using the editor
 
-Override the default message content in your Django settings:
+Save a new page to enable the **QR Code** tab's preview, **Download SVG** and
+**Download EPS** controls. These require admin access and permission to edit
+the page, including drafts.
 
-```python
-WAGTAIL_QRCODE_EMAIL_SUBJECT = "Your QR code"
-WAGTAIL_QRCODE_EMAIL_BODY = "Please find your QR code attached as an EPS file."
-```
+**Reset scan count** asks for confirmation and resets the count immediately.
+It preserves unsaved edits, creates no revision or email, and cannot be undone
+by restoring a revision. The button is disabled at zero.
 
-These are plain text values, with no template substitution. They also supply the
-defaults when calling `send_qr_code_email()` without a subject or body. Constructor
-`initial=` values take precedence over custom field initials, which take
-precedence over these settings. Field initials may be text, an empty string or a
-callable; disabled message fields retain their initial values when sending.
-Submitted edits, including cleared fields, are preserved when validation fails.
-No database migration is needed for these form defaults.
+To email an EPS, enter a recipient, check the subject and body, then choose
+**Save draft** or **Publish**. Both message fields are required with a recipient.
+Email fields are not stored with the page; the recipient starts blank when
+reopening the editor. Delivery happens after the save transaction commits.
+Autosave, later workflow approval and scheduled publication do not repeat it.
 
-Changing page content does not create or synchronise QR assets. Drafts and
-revisions use the same page identity; restoring a revision does not reset scan
-counts. Each copy, translation and alias uses its own page ID, including chained
-aliases. Deleting a page removes its counter record and leaves no QR files to
-clean up.
+For aliases, use **Preview QR code**, **Download QR SVG** and **Download QR EPS**
+in the header's **Actions** menu. These use the alias's own ID.
 
-On an alias's edit screen, open the header's **Actions** menu for **Preview QR
-code**, **Download QR SVG** and **Download QR EPS**. These use the alias's own
-page ID and require permission to edit the alias.
+## Scans and counts
 
-This design is for new QR usage. Importing existing QR documents, counters or
-legacy revisions is outside the current implementation. Host page models that
-used the old mixin fields need schema migrations when those fields are removed;
-no legacy data conversion is provided.
+The example route encodes `https://example.com/qr-code/?id=123`. Custom mount
+paths work too; direct view wiring must use the name `qr_code_page_view`.
 
-### If you don't need to be able to send the qrcode via email your page model can be
+Only live QR pages redirect. Missing, invalid, unknown, unpublished and non-QR
+page IDs return 404 without changing counts. Private pages still enforce access
+at the destination. Counts measure redirects, including access prompts, rather
+than unique visitors or confirmed views.
 
-```python
-# models.py
+The first successful scan creates a counter record. Drafts and revisions share
+the page's QR identity; restoring a revision leaves its count alone. Copies,
+translations and aliases, including chained aliases, have independent counts.
+Deleting a page deletes its counter.
 
-from wagtail.admin.panels import (
-    FieldPanel,
-    MultiFieldPanel,
-    ObjectList,
-    TabbedInterface,
-)
-from wagtail.models import Page
-
-from wagtail_qrcode.models import QRCodeMixin
-
-
-class QRCodePage(QRCodeMixin, Page):
-    qrcode_panels = QRCodeMixin.panels
-
-    edit_handler = TabbedInterface(
-        [
-            ObjectList(Page.content_panels, heading="Content"),
-            ObjectList(Page.promote_panels, heading="Promote"),
-            ObjectList(Page.settings_panels, heading="Settings", classname="settings"),
-            ObjectList(qrcode_panels, heading="QR Code", classname="qr-code"),
-        ]
-    )
-```
-
-## URLS
-
-Include the wagtail-qrcode urls in your site urls before `wagtail_urls`.
-
-The url provides the redirect endpoint when the qr-code is scanned and viewed in a browser.
-
-```python
-urlpatterns = [
-    # ...
-    path("qr-code/", include("wagtail_qrcode.urls")),
-    # ...
-]
-```
-
-The named `qr_code_page_view` route is used when generating the QR payload, so a
-custom mount path is supported. If wiring the view directly, use that same name.
-For the example above, the payload is `https://example.com/qr-code/?id=123`.
-The base URL falls back to `WAGTAILADMIN_BASE_URL` if no QR base URL is set.
-
-The scan endpoint redirects only live, QR-enabled pages. Private-page access is
-still enforced by Wagtail when the destination is opened. The counter measures
-redirects, including redirects to a private page's access prompt; it is not a
-count of unique visitors or confirmed content views. Invalid IDs and unpublished
-or non-QR pages return 404 without increasing a count.
-
-Keep the scan domain and route reachable after printing. Newly generated codes
-use the current base URL; configuration changes do not change paper copies.
-Page IDs are stable within a database, but an export/import that remaps IDs does
-not preserve them automatically.
-
-### Optional public preview
-
-To render a QR directly in a page template:
-
-```html
-{% load wagtail_qrcode_tags %}
-{% qr_code_svg page %}
-```
-
-This renders SVG in memory and does not require a document or an admin download
-URL. It produces no output for an unsaved page. QR generation in Python uses
-`WagtailQrCode(page).render("svg")` or `.render("eps")`, returning bytes.
+Keep the encoded domain and route reachable after printing. Configuration
+changes affect new output, not printed codes. Database exports that remap page
+IDs do not preserve QR identities automatically.
 
 ## Configuration
 
-Set the configuration (optional, these are the defaults)
+These optional Django settings show the defaults:
 
 ```python
 WAGTAIL_QR_CODE = {
@@ -246,36 +158,50 @@ WAGTAIL_QR_CODE = {
     "quiet_zone": 6,
     "svg_has_xml_declaration": False,
 }
+WAGTAIL_QRCODE_EMAIL_SUBJECT = "Your QR code"
+WAGTAIL_QRCODE_EMAIL_BODY = "Please find your QR code attached as an EPS file."
 ```
 
-- scale: the size of the dots in the QR code
-- quiet_zone: the plain border around the QR code
-- svg_has_xml_declaration: does the QR code SVG have an XML declaration
+`scale` sets dot size; `quiet_zone` sets the border width.
+SVG always includes its XML namespace. Changes apply to the next preview,
+download or email.
 
-SVG output always includes the XML namespace needed for standalone images. The
-old `collection_name` and `svg_has_doc_type_declaration` options are removed.
-Rendering settings apply to the next preview, download or email; generated output
-is not archived.
+Email defaults are plain text, without template substitution. Custom field
+initials override settings; constructor `initial=` values override both.
+Empty strings, callables, disabled fields and custom form cleaning are respected.
+Invalid submissions retain entered values.
+`wagtail_qrcode.wagtail_hooks.send_qr_code_email()` uses the same defaults
+when subject or body is omitted.
 
-## Local demonstration
+### Public preview
 
-Install uv 0.12.10 or newer and Just 1.59.0 or newer following the
-[contributor setup](docs/contrubute.md#install-uv-and-just-then-sync-dependencies).
-Run `just sync`, `just sandbox-setup` and `just sandbox-run` to explore
-this checkout at <http://localhost:8000/> (initial admin login: `admin` / `admin`).
-The persistent sandbox has published and draft examples using on-demand QR
-previews, SVG/EPS downloads and page-owned scan counts, without QR Documents.
-See the [sandbox guide](docs/sandbox.md) and [smoke tests](docs/smoke-tests.md)
-for email capture, test isolation, copies, aliases and device testing.
+Render a QR code in a page template:
 
-## Contributing
+```html
+{% load wagtail_qrcode_tags %}
+{% qr_code_svg page %}
+```
 
-If you would like to suggest an improvement to the package [contributions](docs/contrubute.md) are welcome
+Unsaved pages produce no output. In Python, use
+`WagtailQrCode(page).render("svg")` or `.render("eps")` from
+`wagtail_qrcode.cls`; both return bytes.
 
-Create working branches from `main` and target pull requests at `main`.
-Prepare and tag package releases from `main`.
-See the [branch workflow](docs/contrubute.md#branches-and-pull-requests) for details.
+## Try it locally
 
-## Issues
+Follow the [contributor setup](docs/contrubute.md#setup), then run:
 
-If you find an issue please consider [raising and issue](https://github.com/nickmoreton/wagtail-qrcode/issues)
+```bash
+just sandbox-setup
+just sandbox-run
+```
+
+Open <http://localhost:8000/>; the initial admin login is `admin` / `admin`.
+See the [sandbox guide](docs/sandbox.md) for email capture and phone testing,
+and the [smoke tests](docs/smoke-tests.md) for manual checks.
+
+## Contributing and issues
+
+[Contributions](docs/contrubute.md) are welcome. Branch from `main`, target PRs
+at `main`, and prepare and tag releases there.
+
+[Raise an issue](https://github.com/nm-packages/wagtail-qrcode/issues) if you find a problem.

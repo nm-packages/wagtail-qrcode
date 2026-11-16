@@ -36,13 +36,15 @@ Resolve product or compatibility decisions that materially affect the outcome.
 
 ## Verify the behavior
 
+Follow the repository's
+[test driven development workflow](../../../docs/contrubute.md#test-driven-development).
+
 Choose checks that demonstrate the user-visible result. A passing HTTP status
 alone does not verify a redirect destination or the content of an admin panel.
-For a meaningful regression test, show that it fails for the expected behavior
-before fixing the code when practical. Prefer Django `TestCase` and
-`override_settings` for package settings. Cover the package's integration with
-Wagtail where a test would catch a regression and rely on Wagtail's existing
-coverage for framework behavior the package leaves unchanged.
+Prefer Django `TestCase` and `override_settings` for package settings. Cover the
+package's integration with Wagtail where a test would catch a regression and
+rely on Wagtail's existing coverage for framework behavior the package leaves
+unchanged.
 
 - Use `uv run --locked python manage.py test <test-label>` for focused development checks.
 - Run `just test` for package changes. Run relevant tox environments for
