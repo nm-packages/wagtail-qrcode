@@ -1,106 +1,169 @@
 # Developer smoke tests
 
-Use the [sandbox](sandbox.md) and disposable pages for copy, reset and deletion
-checks. QR previews, downloads and email attachments should not create Documents
-or stored server assets.
+Use these checks to test the QR code workflows in the Wagtail admin. Follow the
+[sandbox guide](sandbox.md#start-the-sandbox) to start the site and sign in.
 
-## 1. Setup and downloads
+Use disposable pages for changes you want to undo, especially moves, count
+resets and deletion. The final check resets the whole sandbox, so back up any
+manual data you want to keep before running it.
 
-Run `just sandbox-setup` and `just sandbox-run`. Sign in at
-<http://localhost:8000/admin/> with `admin` / `admin`, unless changed.
+QR previews, downloads and email attachments are generated in memory. Running
+`just sandbox-email` saves the captured EPS attachment in
+`sandbox/.data/attachments/` so you can inspect it.
 
-- The homepage lists the published example. The draft is available only in admin
-  and Preview. New examples have zero scans and no counter rows.
-- Open each example's **QR Code** tab. Check the preview, count and email fields.
-  Download SVG and EPS, including from the saved draft.
-- SVG opens in an SVG viewer; EPS starts with `%!PS-Adobe`. Export timestamps
-  may differ. Downloads create no counter rows or server files.
-- Signed-out preview/download requests require login. An admin user without
-  permission to edit the page cannot download its QR.
+## Preview and download a code
 
-## 2. Scan, rename and move
+After a fresh setup, the homepage should list the published example. The draft
+should be available in the admin and through Preview, but not as a public page.
+Both examples should start with zero scans and no scan-counter records.
 
-Choose **Follow encoded redirect** on the published example.
+1. Open each example in the editor and select the **QR Code** tab. Check that
+   the preview, scan count and email fields appear.
+2. Download both SVG and EPS files from each example, including the saved draft.
+   Open the SVG in an SVG viewer and check that the EPS starts with `%!PS-Adobe`.
+   Export timestamps may differ between downloads.
+3. Check that previewing and downloading have not created scan-counter records
+   or stored QR files on the server.
+4. Request a preview and a download while signed out. Both should require login.
+   Then try downloading as an admin user who cannot edit the page; the download
+   should be denied.
 
-- `ORIGIN/qr-code/?id=PAGE_ID` redirects to the current URL and adds one scan.
-- Rename the title and slug, publish, then retry the same scan URL. It still
-  works. Repeat a move with a disposable page type that allows it.
-- Missing, invalid, unknown, draft and non-QR page IDs return 404 without counting.
-- Private live pages enforce access at the destination; redirects to an access
-  prompt still count.
+## Scan a code after renaming or moving a page
 
-## 3. Reset counts
+1. Open the published example and choose **Follow encoded redirect**. The scan
+   URL, `ORIGIN/qr-code/?id=PAGE_ID`, should redirect to the page's current URL
+   and add one to its count. Keep this scan URL for the next steps.
+2. Change the page's title and slug, then publish it. Visit the same scan URL
+   again. It should reach the new page URL and add another scan.
+3. Move a disposable QR page to another location, using a page type that allows
+   the move. Its existing scan URL should still reach it and increase its count.
 
-Scan a disposable page, open its editor and change the title without saving.
+Also check requests with no page ID, an invalid value, an ID that does not exist,
+a draft's ID and a non-QR page's ID. Each should return 404 without increasing
+any count.
 
-- Choose **Reset scan count**; cancel once, then confirm.
-- The count becomes zero, a success message appears and the button is disabled.
-  The unsaved title remains; no revision or email is created.
-- Scan again and reload: the count is one. Also check a previously scanned page
-  after unpublishing it.
-- A user without edit permission cannot reset. A failed reset leaves the count
-  unchanged and allows retry.
+For a private, published page, check that the destination still enforces its
+access restrictions. A redirect to an access prompt should count as a scan.
 
-## 4. Drafts, revisions and autosave
+## Reset a scan count
 
-Record a published title and count. Change the title with the recipient blank,
-then choose **Save draft**.
+Scan a disposable page, open its editor and change the title without saving it.
 
-- Preview shows the draft; the public page keeps its published content.
-- Publish a title, scan, then restore an earlier revision. The QR identity and
-  count remain; no QR files are created.
-- Enter a new title and valid email fields. Wait for a successful autosave request
-  in the browser Network panel, then reload.
-- The draft title remains, live content stays unchanged, and no email is sent.
-  One-time email inputs are not restored.
+1. Choose **Reset scan count**, then cancel. The count should stay unchanged.
+2. Choose it again and confirm. The count should become zero, a success message
+   should appear and the reset button should become disabled. Your unsaved title
+   should remain in the editor, with no new revision or email.
+3. Scan the page again and reload the editor. The count should now be one.
+4. Unpublish the page and check that you can still reset its existing count.
 
-## 5. Email
+Check that a user without edit permission cannot reset the count. Also try a
+reset while the server is temporarily stopped: the request should fail without
+changing the count. Restart the server and check that you can retry successfully.
 
-Reopen the editor. The recipient is blank; the subject is **Your QR code** and
-the body is **Please find your QR code attached as an EPS file.**
+## Save drafts, restore revisions and check autosave
 
-- Enter a recipient, clear each message field in turn and save. Validation
-  requires the missing value and preserves input.
-- Enter `reader@example.test`, subject `QR smoke test` and a body. Save a draft,
-  then run `just sandbox-email`. Repeat with **Publish**.
-- Each request captures one message with those values and `qr-code-PAGE_ID.eps`.
-  Extracted EPS matches a fresh download apart from `%%CreationDate:`.
-  No external email or Document is created; saving a draft does not publish it.
-- Restart with the [email environment overrides](sandbox.md#change-settings)
-  and reopen the editor to check new defaults.
+1. Record a published page's title and scan count. Leave the email recipient
+   blank, change the title and choose **Save draft**. Preview should show your
+   new title while the public page keeps its published content.
+2. Publish a title change and scan the page. Restore an earlier revision and
+   check that the page keeps its QR identity and count. Restoring the revision
+   should not create QR files.
+3. Enter another title change and fill in valid email fields. In your browser's
+   Network panel, wait for a successful autosave request, then reload the editor.
+   The draft title should remain and the public page should stay unchanged.
+   Autosave should send no email, and your entered email values should not be
+   restored.
 
-Clear the recipient before unrelated saves.
+## Send a QR code by email
 
-## 6. Copies and aliases
+Use a draft page for this check. Reopen its editor without email overrides
+configured. The recipient should be blank, the subject should be **Your QR code**
+and the body should be **Please find your QR code attached as an EPS file.**
 
-Copy the published example, create an alias and optionally a chained alias.
-Publish the ordinary copy.
+1. Enter a recipient and clear the subject, then try saving. Validation should
+   ask for the subject and preserve your input. Restore the subject and repeat
+   with an empty body.
+2. Enter `reader@example.test`, use `QR smoke test` as the subject and write a
+   body. Choose **Save draft**, then run `just sandbox-email` in another terminal.
+   There should be one new captured message with those values and an attachment
+   named `qr-code-PAGE_ID.eps`. The page should remain a draft.
+3. Compare the extracted EPS with a fresh download. They should match apart
+   from the `%%CreationDate:` timestamp.
+4. Enter the email values again and repeat with **Publish**. This should capture
+   one more message. Neither action should deliver external email or create a
+   Wagtail Document.
+5. Restart with the [email environment overrides](sandbox.md#change-settings)
+   and reopen the editor. The subject and body should use the new defaults.
 
-- Each page's preview/download encodes its own ID and starts with zero scans.
-  For alias downloads, use the header's **Actions** menu.
-- Scan each: counts remain independent. Publish a source title change: aliases
-  update their content while keeping their QR identity.
-- Repeat setup: no duplicate examples or changes to copies, aliases or edited titles.
+Clear the recipient before saving unrelated edits.
 
-## 7. Settings, persistence and deletion
+## Copy a page and create aliases
 
-Restart with `WAGTAIL_QR_CODE='{"scale": 4}' just sandbox-run`.
+Copy the published example, create an alias and, optionally, create an alias of
+that alias. Publish the ordinary copy.
 
-- Reopen previews and downloads without saving: new output uses scale 4;
-  omitted options retain defaults.
-- Record titles, drafts, counts and captured email. Stop the server, run setup
-  twice, `just test` and `just sandbox-test`, then restart without overrides.
-  Tests pass and manual data remains, with one of each seeded example.
-- Delete a scanned disposable page or alias. Its scan URL returns 404 and its
-  counter is removed; other pages and counts remain. Downloads and captured
-  emails remain independent copies.
+1. Preview and download each new page's code. For aliases, use the header's
+   **Actions** menu. Each code should encode its own page ID, and each new page
+   should start with zero scans.
+2. Scan each code and check that only its own page's count increases.
+3. Publish a title change on the source page. Its aliases should receive the
+   content change while keeping their own QR identities.
+4. Run `just sandbox-setup` again. It should leave copies, aliases and edited
+   titles unchanged, without creating duplicate examples.
 
-## 8. Device testing and reset
+## Change QR rendering settings
 
-Optionally follow the [LAN/tunnel setup](sandbox.md#scan-from-a-phone)
-and scan a new code from a phone. It reaches the page and adds a scan.
+Stop the server and restart it with a different scale:
 
-To discard manual data, stop the server, back up `sandbox/.data/` if needed,
-then run `just sandbox-reset` and `just sandbox-run`. The two examples and
-initial login return, with no counts or stored QR assets. Files outside the
-data directory remain.
+```bash
+WAGTAIL_QR_CODE='{"scale": 4}' just sandbox-run
+```
+
+Reopen a preview and download new codes without saving the page. The new output
+should use scale 4, with omitted options keeping their default values.
+
+## Check that setup and tests preserve your data
+
+Record your page titles, drafts, scan counts and captured email. Stop the server,
+then run:
+
+```bash
+just sandbox-setup
+just sandbox-setup
+just test
+just sandbox-test
+just sandbox-run
+```
+
+Start without the earlier settings overrides. Both test suites should pass,
+your manual data should remain and there should still be exactly one of each
+seeded example.
+
+## Delete a page
+
+Delete a scanned disposable page or alias, then visit its scan URL. It should
+return 404, and the page's scan-counter record should be removed. Other pages
+and their counts should stay unchanged.
+
+Previously downloaded codes and captured emails should remain available as
+independent copies.
+
+## Scan from a phone
+
+Follow the [phone setup](sandbox.md#scan-from-a-phone), then scan a newly
+downloaded code from your phone. It should reach the page and add one scan.
+You can skip this check if you are not testing with another device.
+
+## Reset the sandbox
+
+Stop the server and back up `sandbox/.data/` if you want to keep any manual data.
+Then run:
+
+```bash
+just sandbox-reset
+just sandbox-run
+```
+
+The two examples and the initial **admin / admin** login should return, with
+zero scans and no stored QR assets. Files outside `sandbox/.data/` should remain
+unchanged.
